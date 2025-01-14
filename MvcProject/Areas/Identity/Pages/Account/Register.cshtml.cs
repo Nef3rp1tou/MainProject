@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using MvcProject.Interfaces.IServices;
 
 namespace MvcProject.Areas.Identity.Pages.Account
 {
@@ -29,13 +30,15 @@ namespace MvcProject.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly IWalletService _walletService;
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
             IUserStore<IdentityUser> userStore,
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IWalletService walletService)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -43,6 +46,7 @@ namespace MvcProject.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _walletService = walletService;
         }
 
         /// <summary>
@@ -124,7 +128,19 @@ namespace MvcProject.Areas.Identity.Pages.Account
 
                     await _userManager.AddToRoleAsync(user, "Player");
 
-
+                    // Create a wallet for the user
+                    try
+                    {
+                        var userIdfForWallet = await _userManager.GetUserIdAsync(user);
+                        await _walletService.CreateWalletForUserAsync(userIdfForWallet); // Call WalletService
+                        _logger.LogInformation("Wallet created for the user.");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Failed to create wallet for user: {ex.Message}");
+                        ModelState.AddModelError(string.Empty, "An error occurred while creating the user's wallet.");
+                        return Page(); // Return to the registration page if wallet creation fails
+                    }
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -181,3 +197,4 @@ namespace MvcProject.Areas.Identity.Pages.Account
         }
     }
 }
+
