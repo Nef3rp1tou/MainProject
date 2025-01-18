@@ -20,14 +20,14 @@ namespace MvcProject.Services
             return await _walletRepository.GetWalletByUserIdAsync(userId);
         }
 
-        public async Task CreateWalletForUserAsync(string userId)
+        public async Task CreateWalletForUserAsync(string userId, int currency)
         {
             var wallet = new Wallet
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 CurrentBalance = 0, // Initial balance
-                Currency = Enums.Currency.EUR // Initial currency
+                Currency = (Enums.Currency)currency
             };
 
             await _walletRepository.CreateWalletAsync(wallet);

@@ -28,12 +28,22 @@ namespace MvcProject.Repositories
             await _dbConnection.ExecuteAsync(sql, wallet);
         }
 
-        public async Task UpdateWalletBalanceAsync(string userId, decimal newBalance)
+        public async Task UpdateWalletBalanceAsync(string userId, decimal newBalance, IDbTransaction transaction = null)
         {
-            var sql = @"UPDATE Wallet 
-                    SET CurrentBalance = @NewBalance 
-                    WHERE UserId = @UserId";
-            await _dbConnection.ExecuteAsync(sql, new { UserId = userId, NewBalance = newBalance });
+            var sql = @"
+        UPDATE Wallet 
+        SET CurrentBalance = @NewBalance 
+        WHERE UserId = @UserId";
+
+            if (transaction == null)
+            {
+                await _dbConnection.ExecuteAsync(sql, new { NewBalance = newBalance, UserId = userId });
+            }
+            else
+            {
+                await _dbConnection.ExecuteAsync(sql, new { NewBalance = newBalance, UserId = userId }, transaction);
+            }
         }
+
     }
 }

@@ -22,6 +22,9 @@ builder.Services.AddDbContext<MvcProjectContext>(options =>
 builder.Services.AddScoped<IWalletRepository, WalletRepository>();
 builder.Services.AddScoped<IWalletService, WalletService>();
 
+builder.Services.AddScoped<IDepositWithdrawRequestsRepository, DepositWithdrawRequestsRepository>();
+builder.Services.AddScoped<IDepositWithdrawRequestsService, DepositWithdrawRequestsService>();
+
 // Register Identity services with roles
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {

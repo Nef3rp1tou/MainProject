@@ -2,6 +2,40 @@
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<h1>Admin Dashboard</h1>
-<p>Welcome to the Admin Panel! Use the navigation links below to manage the system.</p>
+@model IEnumerable<MvcProject.Models.DepositWithdrawRequests>
 
+<h2>Admin Panel</h2>
+
+<div class="table-responsive">
+    <table class="table table-bordered" id="pending-requests">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var request in Model)
+            {
+                <tr>
+                    <td>@request.UserId</td>
+                    <td>@request.Amount</td>
+                    <td>@request.TransactionType</td>
+                    <td>@request.Status</td>
+                    <td>@request.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>
+                        <button class="btn btn-success btn-sm approve-request" data-id="@request.Id">Approve</button>
+                        <button class="btn btn-danger btn-sm reject-request" data-id="@request.Id">Reject</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@section Scripts {
+    <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
+}

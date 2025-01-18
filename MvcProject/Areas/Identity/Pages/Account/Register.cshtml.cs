@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using MvcProject.Interfaces.IServices;
@@ -49,71 +50,58 @@ namespace MvcProject.Areas.Identity.Pages.Account
             _walletService = walletService;
         }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [BindProperty]
         public InputModel Input { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public string ReturnUrl { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
+        public SelectList CurrencyOptions { get; set; }
+
         public class InputModel
         {
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [Required]
             [EmailAddress]
             [Display(Name = "Email")]
             public string Email { get; set; }
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [Required]
             [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
             public string Password { get; set; }
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
-        }
 
+            [Required(ErrorMessage = "Please select a currency.")]
+            [Range(1, 3, ErrorMessage = "Please select a valid currency.")]
+            [Display(Name = "Currency")]
+            public int Currency { get; set; }
+        }
 
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            // Populate currency options
+            CurrencyOptions = new SelectList(new[]
+            {
+                new { Value = 1, Text = "EUR" },
+                new { Value = 2, Text = "USD" },
+                new { Value = 3, Text = "GEL" }
+            }, "Value", "Text");
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
@@ -126,28 +114,37 @@ namespace MvcProject.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User created a new account with password.");
 
-                    await _userManager.AddToRoleAsync(user, "Player");
+                    // Assign "Player" role
+                    var roleResult = await _userManager.AddToRoleAsync(user, "Player");
+                    if (!roleResult.Succeeded)
+                    {
+                        _logger.LogError($"Failed to assign 'Player' role: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+                        ModelState.AddModelError(string.Empty, "An error occurred while assigning the role.");
+                        return Page();
+                    }
 
-                    // Create a wallet for the user
+                    // Create wallet
                     try
                     {
-                        var userIdfForWallet = await _userManager.GetUserIdAsync(user);
-                        await _walletService.CreateWalletForUserAsync(userIdfForWallet); // Call WalletService
-                        _logger.LogInformation("Wallet created for the user.");
+                        var userId = await _userManager.GetUserIdAsync(user);
+                        await _walletService.CreateWalletForUserAsync(userId, Input.Currency);
+                        _logger.LogInformation("Wallet created for the user with chosen currency.");
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"Failed to create wallet for user: {ex.Message}");
-                        ModelState.AddModelError(string.Empty, "An error occurred while creating the user's wallet.");
-                        return Page(); // Return to the registration page if wallet creation fails
+                        _logger.LogError($"Failed to create wallet: {ex.Message}");
+                        ModelState.AddModelError(string.Empty, "An error occurred while creating the wallet.");
+                        return Page();
                     }
-                    var userId = await _userManager.GetUserIdAsync(user);
+
+                    // Email confirmation
+                    var userIdString = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
-                        values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
+                        values: new { area = "Identity", userId = userIdString, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
                     await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
@@ -163,13 +160,14 @@ namespace MvcProject.Areas.Identity.Pages.Account
                         return LocalRedirect(returnUrl);
                     }
                 }
+
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
 
-            // If we got this far, something failed, redisplay form
+            // If we got this far, something failed; redisplay the form
             return Page();
         }
 
@@ -197,4 +195,3 @@ namespace MvcProject.Areas.Identity.Pages.Account
         }
     }
 }
-
