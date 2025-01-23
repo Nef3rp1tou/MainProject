@@ -1,4 +1,4 @@
-namespace BankingApi.DTOs;
+namespace MvcProject.DTOs;
 
 public class DepositRequestDto
 {

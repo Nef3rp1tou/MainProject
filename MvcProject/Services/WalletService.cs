@@ -1,8 +1,7 @@
-﻿using Dapper;
-using MvcProject.Interfaces.IRepositories;
+﻿using MvcProject.Interfaces.IRepositories;
 using MvcProject.Interfaces.IServices;
 using MvcProject.Models;
-using System.Data;
+using System.Threading.Tasks;
 
 namespace MvcProject.Services
 {
@@ -38,7 +37,14 @@ namespace MvcProject.Services
             await _walletRepository.UpdateWalletBalanceAsync(userId, newBalance);
         }
 
+  
 
-       
+        public async Task UnlockBlockedAmountAsync(string userId, decimal amount)
+        {
+            // Logic to unlock blocked amount for withdrawals
+            var wallet = await _walletRepository.GetWalletByUserIdAsync(userId);
+            var updatedBalance = wallet.CurrentBalance + amount; // Release the blocked amount
+            await UpdateWalletBalanceAsync(userId, updatedBalance);
+        }
     }
 }

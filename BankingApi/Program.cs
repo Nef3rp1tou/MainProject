@@ -1,18 +1,30 @@
+using BankingApi.IServices;
+using BankingApi.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddEndpointsApiExplorer(); // Required for Swagger/OpenAPI documentation
-builder.Services.AddSwaggerGen(); // Add Swagger generator
+builder.Services.AddControllers(); 
+builder.Services.AddEndpointsApiExplorer(); 
+builder.Services.AddSwaggerGen(); 
+
+// Register application services
+builder.Services.AddHttpClient<ICallbackService, CallbackService>(); 
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger(); // Enable Swagger middleware
-    app.UseSwaggerUI(); // Enable Swagger UI
+    app.UseSwagger(); 
+    app.UseSwaggerUI(); 
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers(); 
 
 app.Run();

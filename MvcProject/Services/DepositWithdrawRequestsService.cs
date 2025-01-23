@@ -9,6 +9,7 @@ using System.Transactions;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using NuGet.Protocol.Core.Types;
 
 
 namespace MvcProject.Services
@@ -18,20 +19,24 @@ namespace MvcProject.Services
         private readonly IDepositWithdrawRequestsRepository _requestRepository;
         private readonly IWalletRepository _walletRepository;
         private readonly IDbConnection _dbConnection;
+        private readonly IBankingApiService _bankingApiService;
+
         public DepositWithdrawRequestsService(
           IDepositWithdrawRequestsRepository requestRepository,
           IWalletRepository walletRepository,
-          IDbConnection dbConnection)
+          IDbConnection dbConnection, IBankingApiService bankingApiService)
         {
             _requestRepository = requestRepository;
             _walletRepository = walletRepository;
             _dbConnection = dbConnection;
+            _bankingApiService = bankingApiService;
+
         }
-        public async Task CreateRequestAsync(string userId, TransactionType type, decimal amount)
+        public async Task CreateRequestAsync(Guid transactionId, string userId, TransactionType type, decimal amount)
         {
             var request = new DepositWithdrawRequests
             {
-                Id = Guid.NewGuid(),
+                Id = transactionId,
                 UserId = userId,
                 TransactionType = type,
                 Amount = amount,
@@ -64,75 +69,32 @@ namespace MvcProject.Services
             if (request == null)
                 throw new InvalidOperationException("Request not found.");
 
-            // Optional: Add validation logic
             if (request.Status == Status.Success || request.Status == Status.Rejected)
                 throw new InvalidOperationException("Cannot update status of a processed request.");
 
-            // Update the status in the repository
             await _requestRepository.UpdateRequestStatusAsync(id, status);
         }
 
-        public async Task ApproveRequestAsync(Guid requestId)
-        {
-            var request = await _requestRepository.GetRequestByIdAsync(requestId);
-            if (request == null)
-            {
-                Console.WriteLine($"Request with ID {requestId} not found.");
-                throw new InvalidOperationException("Invalid or already processed request.");
-            }
+        //public async Task<string> SendDepositToBankingApiAsync(Guid transactionId, decimal amount)
+        //{
+        //    var response = await _bankingApiService.SendDepositRequestAsync(transactionId, amount);
 
-            if (request.Status != Status.Pending)
-            {
-                Console.WriteLine($"Request with ID {requestId} has already been processed with status {request.Status}.");
-                throw new InvalidOperationException("Invalid or already processed request.");
-            }
+        //    if (response.Status == Status.Success && !string.IsNullOrEmpty(response.PaymentUrl))
+        //    {
+        //        return response.PaymentUrl;
+        //    }
 
-            await _requestRepository.UpdateRequestStatusAsync(requestId, Status.Success);
-        }
+        //    throw new InvalidOperationException("Banking API rejected the deposit request or returned an invalid URL.");
+        //}
 
-        public async Task RejectRequestAsync(Guid requestId)
-        {
-            var request = await _requestRepository.GetRequestByIdAsync(requestId);
-            if (request == null || request.Status != Status.Pending)
-                throw new InvalidOperationException("Invalid or already processed request.");
 
-            await _requestRepository.UpdateRequestStatusAsync(requestId, Status.Rejected);
-        }
+        //public async Task SendWithdrawToBankingApiAsync(Guid transactionId, decimal amount, string userId, string accountNumber, string fullName)
+        //{
+        //    await _bankingApiService.SendWithdrawRequestAsync(transactionId, amount, userId, accountNumber, fullName);
+        //}
 
-        public async Task HandleWithdrawRequestAsync(string userId, decimal amount)
-        {
-            using (var transaction = _dbConnection.BeginTransaction())
-            {
-                try
-                {
-                    var wallet = await _walletRepository.GetWalletByUserIdAsync(userId);
-                    if (wallet.CurrentBalance < amount)
-                        throw new InvalidOperationException("Insufficient balance.");
 
-                    var newBalance = wallet.CurrentBalance - amount;
-                    await _walletRepository.UpdateWalletBalanceAsync(userId, newBalance, transaction);
-
-                    var request = new DepositWithdrawRequests
-                    {
-                        Id = Guid.NewGuid(),
-                        UserId = userId,
-                        TransactionType = TransactionType.Withdraw,
-                        Amount = amount,
-                        Status = Status.Success,
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    await _requestRepository.CreateRequestAsync(request);
-                    transaction.Commit();
-
-                }
-                catch
-                {
-                    transaction.Rollback();
-                    throw;
-                }
-            }
-        }
+     
 
     }
 }

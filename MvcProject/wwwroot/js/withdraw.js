@@ -1,28 +1,38 @@
-﻿$(document).ready(function () {
-    $("#withdraw-form").submit(async function (e) {
-        e.preventDefault();
+﻿document.getElementById('withdraw-form').addEventListener('submit', function (event) {
+    event.preventDefault();
 
-        const amount = $("#amount").val();
-        if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-            $("#response-message").html('<div class="alert alert-danger">Invalid amount entered.</div>');
-            return;
-        }
+    const fullName = document.getElementById('fullName').value.trim();
+    const cardNumber = document.getElementById('cardNumber').value.trim();
+    const amount = parseFloat(document.getElementById('amount').value);
 
-        try {
-            const response = await fetch('/Transactions/Withdraw', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount: parseFloat(amount) }) // Send as JSON object with "amount"
-            });
+    if (!fullName || !cardNumber || isNaN(amount) || amount <= 0) {
+        document.getElementById('response-message').innerText = 'Please provide valid input in all fields.';
+        return;
+    }
 
-            const result = await response.json();
-            if (result.success) {
-                $("#response-message").html(`<div class="alert alert-success">${result.message}</div>`);
+    const data = { fullName, cardNumber, amount };
+
+    fetch('/Transactions/Withdraw', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+        },
+        body: JSON.stringify(data)
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                document.getElementById('response-message').innerText = 'Withdrawal successful!';
             } else {
-                $("#response-message").html(`<div class="alert alert-danger">${result.message}</div>`);
+                document.getElementById('response-message').innerText = 'Withdrawal failed: ' + data.message;
             }
-        } catch (error) {
-            $("#response-message").html(`<div class="alert alert-danger">Error: ${error.message}</div>`);
-        }
-    });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('response-message').innerText = 'An error occurred. Please try again.';
+        });
 });

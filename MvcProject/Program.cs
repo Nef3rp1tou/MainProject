@@ -7,6 +7,8 @@ using MvcProject.Interfaces.IServices;
 using MvcProject.Repositories;
 using MvcProject.Services;
 using System.Data;
+using MvcProject.Settings;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +18,7 @@ var connectionString = builder.Configuration.GetConnectionString("MvcProjectCont
 
 // Add DbContext for Identity
 builder.Services.AddDbContext<MvcProjectContext>(options =>
-    options.UseSqlServer(connectionString));
+     options.UseSqlServer(connectionString));
 
 // Register repositories and services
 builder.Services.AddScoped<IWalletRepository, WalletRepository>();
@@ -24,6 +26,26 @@ builder.Services.AddScoped<IWalletService, WalletService>();
 
 builder.Services.AddScoped<IDepositWithdrawRequestsRepository, DepositWithdrawRequestsRepository>();
 builder.Services.AddScoped<IDepositWithdrawRequestsService, DepositWithdrawRequestsService>();
+
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+
+builder.Services.AddScoped<IBankingApiService, BankingApiService>();
+
+// Bind and validate BankingApiConfig
+builder.Services.Configure<BankingApiConfig>(builder.Configuration.GetSection("BankingApi"));
+builder.Services.AddSingleton(resolver =>
+{
+    var config = resolver.GetRequiredService<IOptions<BankingApiConfig>>().Value;
+    if (string.IsNullOrWhiteSpace(config.BaseUrl) || string.IsNullOrWhiteSpace(config.MerchantId) || string.IsNullOrWhiteSpace(config.SecretKey))
+    {
+        throw new InvalidOperationException("Banking API configuration is invalid. Ensure BaseUrl, MerchantId, and SecretKey are provided.");
+    }
+    return config;
+});
+
+// Add HTTP client for API communication
+builder.Services.AddHttpClient();
 
 // Register Identity services with roles
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
@@ -73,6 +95,5 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     await RoleSeeder.SeedRolesAndAdminAsync(services);
 }
-
 
 app.Run();

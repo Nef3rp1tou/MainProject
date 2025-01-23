@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MvcProject.Enums;
 using MvcProject.Interfaces.IServices;
 using MvcProject.Models;
 using MvcProject.Services;
@@ -12,10 +13,12 @@ namespace MvcProject.Controllers
     public class AdminController : Controller
     {
         private readonly IDepositWithdrawRequestsService _requestService;
+        private readonly IBankingApiService _bankingApiService;
 
-        public AdminController(IDepositWithdrawRequestsService requestService)
+        public AdminController(IDepositWithdrawRequestsService requestService, IBankingApiService bankingApiService)
         {
             _requestService = requestService;
+            _bankingApiService = bankingApiService;
         }
 
         // Admin Dashboard - Display Pending Requests
@@ -28,18 +31,37 @@ namespace MvcProject.Controllers
 
         // Approve a Request
         [HttpPost]
-        public async Task<IActionResult> ApproveRequest([FromBody] Guid requestId)
+        public async Task<IActionResult> ApproveRequest(Guid requestId)
         {
             try
             {
-                await _requestService.ApproveRequestAsync(requestId);
-                return Json(new { success = true, message = "Request approved successfully!" });
+                var request = await _requestService.GetRequestByIdAsync(requestId);
+
+                if (request == null || request.TransactionType != TransactionType.Withdraw || request.Status != Status.Pending)
+                {
+                    return Json(new { success = false, message = "Invalid request or already processed." });
+                }
+
+                var fullName = TempData["FullName"]?.ToString();
+                var cardNumber = TempData["CardNumber"]?.ToString();
+
+                if (string.IsNullOrEmpty(fullName) || string.IsNullOrEmpty(cardNumber))
+                {
+                    return Json(new { success = false, message = "Full name or card number is missing." });
+                }
+
+                await _bankingApiService.SendWithdrawRequestAsync(
+                    request.Id, request.Amount, request.UserId, cardNumber, fullName
+                );
+
+                return Json(new { success = true, message = "Withdrawal request sent to Banking API. Awaiting confirmation." });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = $"Error: {ex.Message}" });
+                return Json(new { success = false, message = $"An error occurred: {ex.Message}" });
             }
         }
+
 
         // Reject a Request
         [HttpPost]
@@ -47,7 +69,14 @@ namespace MvcProject.Controllers
         {
             try
             {
-                await _requestService.RejectRequestAsync(requestId);
+                var request = await _requestService.GetRequestByIdAsync(requestId);
+
+                if (request == null || request.TransactionType != TransactionType.Withdraw || request.Status != Status.Pending)
+                {
+                    return Json(new { success = false, message = "Invalid request or already processed." });
+                }
+
+                await _requestService.UpdateRequestStatusAsync(requestId, Status.Rejected);
                 return Json(new { success = true, message = "Request rejected successfully!" });
             }
             catch (Exception ex)

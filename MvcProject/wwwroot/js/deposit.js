@@ -17,7 +17,8 @@
 
             const result = await response.json();
             if (result.success) {
-                $("#response-message").html(`<div class="alert alert-success">${result.message}</div>`);
+                // Redirect to the PaymentUrl
+                window.location.href = result.redirectUrl;
             } else {
                 $("#response-message").html(`<div class="alert alert-danger">${result.message}</div>`);
             }

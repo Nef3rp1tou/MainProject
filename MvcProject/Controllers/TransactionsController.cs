@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MvcProject.DTOs;
 using MvcProject.Enums;
 using MvcProject.Interfaces.IServices;
+using MvcProject.Services;
 using System.Security.Claims;
 
 
@@ -9,10 +11,12 @@ using System.Security.Claims;
 public class TransactionsController : Controller
 {
     private readonly IDepositWithdrawRequestsService _requestService;
+    private readonly IBankingApiService _bankingApiService;
 
-    public TransactionsController(IDepositWithdrawRequestsService requestService)
+    public TransactionsController(IDepositWithdrawRequestsService requestService, IBankingApiService bankingApiService)
     {
         _requestService = requestService;
+        _bankingApiService = bankingApiService;
     }
 
     // Deposit Page
@@ -23,15 +27,13 @@ public class TransactionsController : Controller
     }
 
     // Handle Deposit Submission
-    public class DepositRequestModel
-    {
-        public decimal Amount { get; set; }
-    }
+
 
     [HttpPost]
-    public async Task<IActionResult> Deposit([FromBody] DepositRequestModel model)
+    public async Task<IActionResult> Deposit([FromBody] TransactionRequestDto model)
     {
-        if (model.Amount <= 0)
+        decimal amount = model.Amount;
+        if (amount <= 0)
         {
             return Json(new { success = false, message = "Amount must be greater than zero." });
         }
@@ -40,8 +42,16 @@ public class TransactionsController : Controller
 
         try
         {
-            await _requestService.CreateRequestAsync(userId, TransactionType.Deposit, model.Amount);
-            return Json(new { success = true, message = "Deposit request submitted successfully!" });
+            var transactionId = Guid.NewGuid();
+
+            // Create the deposit request in the database
+            await _requestService.CreateRequestAsync(transactionId, userId, TransactionType.Deposit, amount);
+
+            // Send the deposit request to the Banking API and get the PaymentUrl
+            var response = _bankingApiService.SendDepositRequestAsync(transactionId, amount);
+
+            // Redirect the user to the PaymentUrl
+            return Json(new { success = true, redirectUrl = response.Result.PaymentUrl });
         }
         catch (Exception ex)
         {
@@ -49,34 +59,45 @@ public class TransactionsController : Controller
         }
     }
 
-    // Withdraw Page
+
+    [HttpPost]
+    public async Task<IActionResult> Withdraw([FromBody] TransactionRequestDto model)
+    {
+        if (model.Amount <= 0)
+        {
+            return Json(new { success = false, message = "Amount must be greater than zero." });
+        }
+        if (string.IsNullOrWhiteSpace(model.FullName) || string.IsNullOrWhiteSpace(model.CardNumber))
+        {
+            return Json(new { success = false, message = "Full name and card number are required." });
+        }
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        try
+        {
+            // Create a withdrawal request with a Pending status
+            var transactionId = Guid.NewGuid();
+            await _requestService.CreateRequestAsync(transactionId, userId, TransactionType.Withdraw, model.Amount);
+
+            TempData["FullName"] = model.FullName;
+            TempData["CardNumber"] = model.CardNumber;
+
+            return Json(new { success = true, message = "Withdrawal request submitted successfully and is awaiting admin approval." });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = $"An error occurred: {ex.Message}" });
+        }
+    }
+
     [HttpGet]
     public IActionResult Withdraw()
     {
         return View();
     }
 
-    // Handle Withdraw Submission
-    [HttpPost]
-    public async Task<IActionResult> Withdraw([FromBody] DepositRequestModel model)
-    {
-        if (model.Amount <= 0)
-        {
-            return Json(new { success = false, message = "Amount must be greater than zero." });
-        }
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        try
-        {
-            await _requestService.CreateRequestAsync(userId, TransactionType.Withdraw, model.Amount);
-            return Json(new { success = true, message = "Withdrawal request submitted successfully!" });
-        }
-        catch (Exception ex)
-        {
-            return Json(new { success = false, message = $"An error occurred: {ex.Message}" });
-        }
-    }
 
 
     //// Transaction History Page

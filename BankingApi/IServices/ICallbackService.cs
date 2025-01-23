@@ -1,6 +1,8 @@
+using BankingApi.DTOs;
+
 namespace BankingApi.IServices;
 
-public class ICallbackService
+public interface ICallbackService
 {
-    
+    Task SendCallback(TransactionCallbackDto transactionCallbackDto);
 }
