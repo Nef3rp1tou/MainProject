@@ -26,31 +26,38 @@ namespace MvcProject.Services
 
         public async Task<ApiResponse> SendDepositRequestAsync(Guid transactionId, decimal amount)
         {
-            var dataToHash = $"{amount * 100}{_config.MerchantId}{transactionId}{_config.SecretKey}";
-            var hash = GenerateHash(dataToHash);
-
-            var request = new DepositRequestDto
+            try
             {
-                TransactionId = transactionId,
-                Amount = (int)(amount * 100),
-                MerchantId = Guid.Parse(_config.MerchantId),
-                Hash = hash
-            };
+                var dataToHash = $"{(int)amount * 100}{_config.MerchantId}{transactionId}{_config.SecretKey}";
+                var hash = GenerateHash(dataToHash);
 
-            var response = await _httpClient.PostAsJsonAsync($"{_config.BaseUrl}/deposit", request);
+                var request = new
+                {
+                    TransactionId = transactionId,
+                    Amount = (int)(amount * 100),
+                    MerchantId = Guid.Parse(_config.MerchantId),
+                    Hash = hash
+                };
 
-            response.EnsureSuccessStatusCode();
+                var response = await _httpClient.PostAsJsonAsync($"{_config.BaseUrl}/deposit", request);
 
-            return await response.Content.ReadFromJsonAsync<ApiResponse>();
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<ApiResponse>();
+            }
+             catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
-        public async Task<Status> SendDepositFinishRequestAsync(Guid transactionId, decimal amount)
+        public async Task<DepositFinishRequestDto> SendDepositFinishRequestAsync(Guid transactionId, decimal amount)
         {
             try
             {
-                var dataToHash = $"{amount * 100}{_config.MerchantId}{transactionId}{_config.SecretKey}";
+                var dataToHash = $"{(int)amount * 100}{_config.MerchantId}{transactionId}{_config.SecretKey}";
                 var hash = GenerateHash(dataToHash);
 
-                var request = new DepositRequestDto
+                var request = new
                 {
                     TransactionId = transactionId,
                     Amount = (int)(amount * 100),
@@ -62,7 +69,7 @@ namespace MvcProject.Services
 
                 response.EnsureSuccessStatusCode();
 
-                return Status.Success;
+                return await response.Content.ReadFromJsonAsync<DepositFinishRequestDto>();
             }
             catch (Exception ex)
             {
@@ -73,23 +80,30 @@ namespace MvcProject.Services
 
 
 
-        public async Task<ApiResponse> SendWithdrawRequestAsync(Guid transactionId, decimal amount, string userId, string accountNumber, string fullName)
+        public async Task<WithdrawRequestDto> SendWithdrawRequestAsync(Guid transactionId, decimal amount)
         {
-            var dataToHash = $"{amount * 100}{_config.MerchantId}{transactionId}{accountNumber}{fullName}{_config.SecretKey}";
-            var hash = GenerateHash(dataToHash);
-
-            var request = new
+            try
             {
-                TransactionID = transactionId,
-                Amount = (int)(amount * 100),
-                MerchantID = _config.MerchantId,
-                UsersAccountNumber = accountNumber,
-                UsersFullName = fullName,
-                Hash = hash
-            };
+                var dataToHash = $"{(int)amount * 100}{_config.MerchantId}{transactionId}{_config.SecretKey}";
+                var hash = GenerateHash(dataToHash);
 
-            var response = await _httpClient.PostAsJsonAsync($"{_config.BaseUrl}/withdraw", request);
-            return await response.Content.ReadFromJsonAsync<ApiResponse>();
+                var request = new
+                {
+                    TransactionId = transactionId,
+                    Amount = (int)(amount * 100),
+                    MerchantId = Guid.Parse(_config.MerchantId),
+                    Hash = hash
+                };
+
+                var response = await _httpClient.PostAsJsonAsync($"{_config.BaseUrl}/withdraw", request);
+                return await response.Content.ReadFromJsonAsync<WithdrawRequestDto>();
+
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
 
         }
 

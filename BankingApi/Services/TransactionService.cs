@@ -14,11 +14,10 @@ public class TransactionService : ITransactionService
     public TransactionService(IConfiguration configuration)
     {
         // Retrieve the secret key from the appsettings.json
-        _secretKey = configuration["Security:SecretKey"];
+        _secretKey = configuration["Security:SecretKey"] ?? throw new ArgumentNullException(nameof(configuration), "Secret key cannot be null");
     }
     public async Task<DepositResponseDto> Deposit(DepositRequestDto depositRequestDto)
     {
-
         if (!ValidateTheHash(depositRequestDto.Hash, depositRequestDto.TransactionId, depositRequestDto.Amount, depositRequestDto.MerchantId))
         {
             return new DepositResponseDto()
@@ -28,8 +27,8 @@ public class TransactionService : ITransactionService
             };
         }
 
-        var isEven = IsEven(depositRequestDto.Amount);
-        
+        var isEven = await Task.Run(() => IsEven(depositRequestDto.Amount));
+
         return new DepositResponseDto()
         {
             Status = isEven ? Status.Success : Status.Rejected,
@@ -39,20 +38,23 @@ public class TransactionService : ITransactionService
 
     public async Task<WithdrawResponseDto> Withdraw(WithdrawRequestDto withdrawRequestDto)
     {
-        if (!ValidateTheHash(withdrawRequestDto.Hash, withdrawRequestDto.TransactionId, withdrawRequestDto.Amount, 
-            withdrawRequestDto.MerchantId, withdrawRequestDto.UserAccountNumber, withdrawRequestDto.UserFullName))
+        if (!ValidateTheHash(withdrawRequestDto.Hash, withdrawRequestDto.TransactionId, withdrawRequestDto.Amount, withdrawRequestDto.MerchantId))
         {
             return new WithdrawResponseDto()
             {
-                Status = Status.Rejected
+                Status = Status.Rejected,
+                Amount = withdrawRequestDto.Amount,
+                TransactionId = withdrawRequestDto.TransactionId
             };
         }
 
-        var isEven = IsEven(withdrawRequestDto.Amount);
-        
+        var isEven = await Task.Run(() => IsEven(withdrawRequestDto.Amount));
+
         return new WithdrawResponseDto()
         {
             Status = isEven ? Status.Success : Status.Rejected,
+            TransactionId = withdrawRequestDto.TransactionId,
+            Amount = withdrawRequestDto.Amount
         };
     }
     
@@ -61,32 +63,16 @@ public class TransactionService : ITransactionService
         return number % 2 == 0;
     }
 
-    private bool ValidateTheHash(string hash, Guid transactionId, int amount, Guid merchantId, string? accountNumber = null, string? fullName = null)
+    private bool ValidateTheHash(string hash, Guid transactionId, int amount, Guid merchantId)
     {
-        var rawData = new StringBuilder();
-        rawData.Append(amount);
-        rawData.Append(merchantId);
-        rawData.Append(transactionId);
+        var rawData = $"{amount}{merchantId}{transactionId}{_secretKey}";
 
-        if (accountNumber != null)
-        {
-            rawData.Append(accountNumber);
-        }
+        using var sha256 = SHA256.Create();
+        var bytes = Encoding.UTF8.GetBytes(rawData);
+        var hash2 = sha256.ComputeHash(bytes);
+        var computedHash = BitConverter.ToString(hash2).Replace("-", "").ToLower();
 
-        if (fullName != null)
-        {
-            rawData.Append(fullName);
-        }
-
-        rawData.Append(_secretKey);
-
-        using (var sha256 = SHA256.Create())
-        {
-            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(rawData.ToString()));
-            var computedHash = Convert.ToHexString(bytes);
-
-            // Compare the computed hash with the provided hash
-            return string.Equals(computedHash, hash, StringComparison.OrdinalIgnoreCase);
-        }
+       return string.Equals(computedHash, hash, StringComparison.OrdinalIgnoreCase);
+        
     }
 }

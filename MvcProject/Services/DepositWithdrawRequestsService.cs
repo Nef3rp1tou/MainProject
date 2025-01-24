@@ -74,27 +74,6 @@ namespace MvcProject.Services
 
             await _requestRepository.UpdateRequestStatusAsync(id, status);
         }
-
-        //public async Task<string> SendDepositToBankingApiAsync(Guid transactionId, decimal amount)
-        //{
-        //    var response = await _bankingApiService.SendDepositRequestAsync(transactionId, amount);
-
-        //    if (response.Status == Status.Success && !string.IsNullOrEmpty(response.PaymentUrl))
-        //    {
-        //        return response.PaymentUrl;
-        //    }
-
-        //    throw new InvalidOperationException("Banking API rejected the deposit request or returned an invalid URL.");
-        //}
-
-
-        //public async Task SendWithdrawToBankingApiAsync(Guid transactionId, decimal amount, string userId, string accountNumber, string fullName)
-        //{
-        //    await _bankingApiService.SendWithdrawRequestAsync(transactionId, amount, userId, accountNumber, fullName);
-        //}
-
-
-     
-
+  
     }
 }

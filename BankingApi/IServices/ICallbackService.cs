@@ -4,5 +4,5 @@ namespace BankingApi.IServices;
 
 public interface ICallbackService
 {
-    Task SendCallback(TransactionCallbackDto transactionCallbackDto);
+    Task SendCallback(TransactionCallbackDto transactionCallbackDto, bool isDeposit);
 }

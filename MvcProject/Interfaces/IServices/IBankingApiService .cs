@@ -1,4 +1,5 @@
-﻿using MvcProject.Enums;
+﻿using MvcProject.DTOs;
+using MvcProject.Enums;
 using MvcProject.Models;
 
 namespace MvcProject.Interfaces.IServices
@@ -6,9 +7,9 @@ namespace MvcProject.Interfaces.IServices
     public interface IBankingApiService
     {
         Task<ApiResponse> SendDepositRequestAsync(Guid transactionId, decimal amount);
-        Task<Status> SendDepositFinishRequestAsync(Guid transactionId, decimal amount);
+        Task<DepositFinishRequestDto> SendDepositFinishRequestAsync(Guid transactionId, decimal amount);
 
-        Task<ApiResponse> SendWithdrawRequestAsync(Guid transactionId, decimal amount, string userId, string accountNumber, string fullName);
+        Task<WithdrawRequestDto> SendWithdrawRequestAsync(Guid transactionId, decimal amount);
         bool ValidateHash(string receivedHash, string expectedData);
     }
 }

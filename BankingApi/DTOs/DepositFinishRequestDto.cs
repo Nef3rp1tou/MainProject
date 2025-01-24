@@ -1,6 +1,6 @@
-﻿using MvcProject.Enums;
+﻿using BankingApi.Enums;
 
-namespace MvcProject.DTOs
+namespace BankingApi.DTOs
 {
     public class DepositFinishRequestDto
     {

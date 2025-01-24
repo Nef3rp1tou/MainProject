@@ -1,16 +1,13 @@
 ﻿document.getElementById('withdraw-form').addEventListener('submit', function (event) {
     event.preventDefault();
-
-    const fullName = document.getElementById('fullName').value.trim();
-    const cardNumber = document.getElementById('cardNumber').value.trim();
     const amount = parseFloat(document.getElementById('amount').value);
 
-    if (!fullName || !cardNumber || isNaN(amount) || amount <= 0) {
-        document.getElementById('response-message').innerText = 'Please provide valid input in all fields.';
+    if (isNaN(amount) || amount <= 0) {
+        document.getElementById('response-message').innerText = 'Please provide valid input.';
         return;
     }
 
-    const data = { fullName, cardNumber, amount };
+    const data = { amount };
 
     fetch('/Transactions/Withdraw', {
         method: 'POST',

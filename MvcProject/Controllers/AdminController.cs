@@ -31,7 +31,7 @@ namespace MvcProject.Controllers
 
         // Approve a Request
         [HttpPost]
-        public async Task<IActionResult> ApproveRequest(Guid requestId)
+        public async Task<IActionResult> ApproveRequest([FromBody] Guid requestId)
         {
             try
             {
@@ -41,17 +41,8 @@ namespace MvcProject.Controllers
                 {
                     return Json(new { success = false, message = "Invalid request or already processed." });
                 }
-
-                var fullName = TempData["FullName"]?.ToString();
-                var cardNumber = TempData["CardNumber"]?.ToString();
-
-                if (string.IsNullOrEmpty(fullName) || string.IsNullOrEmpty(cardNumber))
-                {
-                    return Json(new { success = false, message = "Full name or card number is missing." });
-                }
-
                 await _bankingApiService.SendWithdrawRequestAsync(
-                    request.Id, request.Amount, request.UserId, cardNumber, fullName
+                    request.Id, request.Amount
                 );
 
                 return Json(new { success = true, message = "Withdrawal request sent to Banking API. Awaiting confirmation." });

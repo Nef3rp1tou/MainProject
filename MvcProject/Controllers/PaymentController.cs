@@ -25,15 +25,12 @@ public class PaymentController : Controller
     {
         try
         {
-            // Forward the request to the Banking API
             var response = await _bankingApiService.SendDepositFinishRequestAsync(request.TransactionId, request.Amount);
 
-            // Return response to the client
-            return Ok(new { status = response, message = "Deposit finish processed successfully" });
+            return Ok(new { status = response.Status, message = "Deposit finish processed successfully" });
         }
         catch (Exception ex)
         {
-            // Handle errors gracefully
             return StatusCode(500, new { message = $"An error occurred: {ex.Message}" });
         }
     }

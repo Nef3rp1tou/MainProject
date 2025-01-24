@@ -75,6 +75,54 @@ namespace MvcProject.Controllers
             }
         }
 
+        [HttpPost("callback/handlewithdraw")]
+        public async Task<IActionResult> HandleWithdraw([FromBody] CallbackRequestModel callbackRequest)
+        {
+            if (callbackRequest == null || callbackRequest.TransactionId == Guid.Empty)
+            {
+                return BadRequest("Invalid callback request.");
+            }
+            try
+            {
+                var request = await _requestService.GetRequestByIdAsync(callbackRequest.TransactionId);
+                if (request == null)
+                {
+                    return NotFound("Transaction not found.");
+                }
+
+                await _requestService.UpdateRequestStatusAsync(callbackRequest.TransactionId, callbackRequest.Status);
+
+                if (callbackRequest.Status == Status.Success)
+                {
+                    var transaction = new Transactions
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = request.UserId,
+                        Amount = request.Amount,
+                        Status = Status.Success,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _transactionService.CreateTransactionAsync(transaction);
+                    var wallet = await _walletService.GetWalletByUserIdAsync(request.UserId);
+                    if (wallet.CurrentBalance < request.Amount)
+                    {
+                        return BadRequest("Insufficient funds.");
+                    }
+                    var updatedBalance = wallet.CurrentBalance - request.Amount;
+                    await _walletService.UpdateWalletBalanceAsync(request.UserId, updatedBalance);
+
+                }
+                return Ok("Callback processed successfully.");
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(500, $"An error occurred while processing the callback: {ex.Message}");
+            }
+
+
+        }
+
     }
 
 }

@@ -19,17 +19,26 @@ public class TransactionController(ITransactionService transactionService, ICall
         
         return Ok(response);
     }
-    
-    
+
+
     [HttpPost]
     [Route("deposit-finish")]
-    public async Task<ActionResult> DepositFinish([FromBody] DepositRequestDto depositRequestDto)
+    public async Task<ActionResult<DepositFinishRequestDto>> DepositFinish([FromBody] DepositRequestDto depositRequestDto)
     {
-        await callbackService.SendCallback(ToTransactionCallbackDto.DepositToTransactionCallbackDto(Status.Success, depositRequestDto));
-        
-        return Ok();
+        var transactionCallbackDto = ToTransactionCallbackDto.DepositToTransactionCallbackDto(Status.Success, depositRequestDto);
+
+        await callbackService.SendCallback(transactionCallbackDto, true);
+
+        var response = new DepositFinishRequestDto
+        {
+            TransactionId = transactionCallbackDto.TransactionId,
+            Amount = transactionCallbackDto.Amount,
+            Status = transactionCallbackDto.Status
+        };
+
+        return Ok(response);
     }
-    
+
     [HttpPost]
     [Route("withdraw")]
     public async Task<ActionResult<WithdrawResponseDto>> Withdraw([FromBody] WithdrawRequestDto requestDto)
@@ -38,7 +47,7 @@ public class TransactionController(ITransactionService transactionService, ICall
         
         if(response.Status == Status.Success)
         {
-            await callbackService.SendCallback(ToTransactionCallbackDto.WithdrawToTransactionCallbackDto(Status.Success, requestDto));
+            await callbackService.SendCallback(ToTransactionCallbackDto.WithdrawToTransactionCallbackDto(Status.Success, requestDto), false);
         }
         
         return Ok(response);

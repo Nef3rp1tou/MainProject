@@ -39,6 +39,10 @@ public class TransactionsController : Controller
         }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Json(new { success = false, message = "User is not authenticated." });
+        }
 
         try
         {
@@ -67,21 +71,18 @@ public class TransactionsController : Controller
         {
             return Json(new { success = false, message = "Amount must be greater than zero." });
         }
-        if (string.IsNullOrWhiteSpace(model.FullName) || string.IsNullOrWhiteSpace(model.CardNumber))
-        {
-            return Json(new { success = false, message = "Full name and card number are required." });
-        }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Json(new { success = false, message = "User is not authenticated." });
+        }
 
         try
         {
-            // Create a withdrawal request with a Pending status
             var transactionId = Guid.NewGuid();
             await _requestService.CreateRequestAsync(transactionId, userId, TransactionType.Withdraw, model.Amount);
 
-            TempData["FullName"] = model.FullName;
-            TempData["CardNumber"] = model.CardNumber;
 
             return Json(new { success = true, message = "Withdrawal request submitted successfully and is awaiting admin approval." });
         }
