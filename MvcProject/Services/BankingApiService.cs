@@ -1,5 +1,8 @@
 ﻿using Azure.Core;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using MvcProject.DTOs;
+using MvcProject.Enums;
 using MvcProject.Interfaces.IServices;
 using MvcProject.Models;
 using MvcProject.Settings;
@@ -40,24 +43,31 @@ namespace MvcProject.Services
 
             return await response.Content.ReadFromJsonAsync<ApiResponse>();
         }
-        public async Task<ApiResponse> SendDepositFinishRequestAsync(Guid transactionId, decimal amount)
+        public async Task<Status> SendDepositFinishRequestAsync(Guid transactionId, decimal amount)
         {
-            var dataToHash = $"{amount * 100}{_config.MerchantId}{transactionId}{_config.SecretKey}";
-            var hash = GenerateHash(dataToHash);
-
-            var request = new DepositRequestDto
+            try
             {
-                TransactionId = transactionId,
-                Amount = (int)(amount * 100),
-                MerchantId = Guid.Parse(_config.MerchantId),
-                Hash = hash
-            };
+                var dataToHash = $"{amount * 100}{_config.MerchantId}{transactionId}{_config.SecretKey}";
+                var hash = GenerateHash(dataToHash);
 
-            var response = await _httpClient.PostAsJsonAsync($"{_config.BaseUrl}/deposit-finish", request);
+                var request = new DepositRequestDto
+                {
+                    TransactionId = transactionId,
+                    Amount = (int)(amount * 100),
+                    MerchantId = Guid.Parse(_config.MerchantId),
+                    Hash = hash
+                };
 
-            response.EnsureSuccessStatusCode();
+                var response = await _httpClient.PostAsJsonAsync($"{_config.BaseUrl}/deposit-finish", request);
 
-            return await response.Content.ReadFromJsonAsync<ApiResponse>();
+                response.EnsureSuccessStatusCode();
+
+                return Status.Success;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
 

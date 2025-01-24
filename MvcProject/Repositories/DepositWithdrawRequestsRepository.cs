@@ -16,9 +16,6 @@ namespace MvcProject.Repositories
             INSERT INTO DepositWithdrawRequests (Id, UserId, TransactionType, Amount, Status, CreatedAt)
             VALUES (@Id, @UserId, @TransactionType, @Amount, @Status, @CreatedAt)";
 
-            request.Id = Guid.NewGuid();
-            request.CreatedAt = DateTime.UtcNow;
-
             await _dbConnection.ExecuteAsync(sql, request);
         }
 

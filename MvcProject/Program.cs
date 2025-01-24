@@ -10,6 +10,7 @@ using System.Data;
 using MvcProject.Settings;
 using Microsoft.Extensions.Options;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure database connection
@@ -31,6 +32,9 @@ builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 builder.Services.AddScoped<IBankingApiService, BankingApiService>();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 
 // Bind and validate BankingApiConfig
 builder.Services.Configure<BankingApiConfig>(builder.Configuration.GetSection("BankingApi"));
@@ -73,7 +77,14 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
+
 }
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

@@ -29,7 +29,7 @@ public class PaymentController : Controller
             var response = await _bankingApiService.SendDepositFinishRequestAsync(request.TransactionId, request.Amount);
 
             // Return response to the client
-            return Ok(new { status = response.Status, message = "Deposit finish processed successfully" });
+            return Ok(new { status = response, message = "Deposit finish processed successfully" });
         }
         catch (Exception ex)
         {
