@@ -14,7 +14,6 @@ public class PaymentController : Controller
     [HttpGet("payment/dummy")]
     public IActionResult Dummy(string transactionId, decimal amount)
     {
-        // Pass transactionId and amount to the view
         ViewData["TransactionId"] = transactionId;
         ViewData["Amount"] = amount;
         return View();

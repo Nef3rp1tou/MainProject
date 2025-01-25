@@ -17,7 +17,6 @@ namespace MvcProject.Controllers
             _walletService = walletService;
         }
 
-        // GET: WalletController
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetBalance()

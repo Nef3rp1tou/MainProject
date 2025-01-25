@@ -98,7 +98,7 @@ namespace MvcProject.Controllers
                     {
                         Id = Guid.NewGuid(),
                         UserId = request.UserId,
-                        Amount = request.Amount,
+                        Amount = -request.Amount,
                         Status = Status.Success,
                         CreatedAt = DateTime.UtcNow
                     };

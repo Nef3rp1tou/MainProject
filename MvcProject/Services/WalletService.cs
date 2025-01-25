@@ -41,9 +41,8 @@ namespace MvcProject.Services
 
         public async Task UnlockBlockedAmountAsync(string userId, decimal amount)
         {
-            // Logic to unlock blocked amount for withdrawals
             var wallet = await _walletRepository.GetWalletByUserIdAsync(userId);
-            var updatedBalance = wallet.CurrentBalance + amount; // Release the blocked amount
+            var updatedBalance = wallet.CurrentBalance + amount; 
             await UpdateWalletBalanceAsync(userId, updatedBalance);
         }
     }

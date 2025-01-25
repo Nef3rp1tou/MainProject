@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using MvcProject.DTOs;
 using MvcProject.Enums;
+using MvcProject.Interfaces.IRepositories;
 using MvcProject.Interfaces.IServices;
-using MvcProject.Services;
 using System.Security.Claims;
 
 
@@ -12,21 +12,25 @@ public class TransactionsController : Controller
 {
     private readonly IDepositWithdrawRequestsService _requestService;
     private readonly IBankingApiService _bankingApiService;
+    private readonly ITransactionService _transactionService;
+    private readonly IWalletRepository _walletService;
 
-    public TransactionsController(IDepositWithdrawRequestsService requestService, IBankingApiService bankingApiService)
+    public TransactionsController(IDepositWithdrawRequestsService requestService, IBankingApiService bankingApiService, ITransactionService transactionService, IWalletRepository walletService)
     {
         _requestService = requestService;
         _bankingApiService = bankingApiService;
+        _transactionService = transactionService;
+        _walletService = walletService;
     }
 
-    // Deposit Page
+
     [HttpGet]
     public IActionResult Deposit()
     {
         return View();
     }
 
-    // Handle Deposit Submission
+
 
 
     [HttpPost]
@@ -48,13 +52,11 @@ public class TransactionsController : Controller
         {
             var transactionId = Guid.NewGuid();
 
-            // Create the deposit request in the database
             await _requestService.CreateRequestAsync(transactionId, userId, TransactionType.Deposit, amount);
 
-            // Send the deposit request to the Banking API and get the PaymentUrl
             var response = _bankingApiService.SendDepositRequestAsync(transactionId, amount);
 
-            // Redirect the user to the PaymentUrl
+       
             return Json(new { success = true, redirectUrl = response.Result.PaymentUrl });
         }
         catch (Exception ex)
@@ -67,12 +69,14 @@ public class TransactionsController : Controller
     [HttpPost]
     public async Task<IActionResult> Withdraw([FromBody] TransactionRequestDto model)
     {
+       
         if (model.Amount <= 0)
         {
             return Json(new { success = false, message = "Amount must be greater than zero." });
         }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var wallet = await _walletService.GetWalletByUserIdAsync(userId);
         if (string.IsNullOrEmpty(userId))
         {
             return Json(new { success = false, message = "User is not authenticated." });
@@ -80,11 +84,15 @@ public class TransactionsController : Controller
 
         try
         {
-            var transactionId = Guid.NewGuid();
-            await _requestService.CreateRequestAsync(transactionId, userId, TransactionType.Withdraw, model.Amount);
+            if (model.Amount <= wallet.CurrentBalance)
+            {
+                var transactionId = Guid.NewGuid();
+                await _requestService.CreateRequestAsync(transactionId, userId, TransactionType.Withdraw, model.Amount);
 
-
-            return Json(new { success = true, message = "Withdrawal request submitted successfully and is awaiting admin approval." });
+                return Json(new { success = true, message = "Withdrawal request submitted successfully and is awaiting admin approval." });
+            }
+            
+            return Json(new { success = false, message = "Insuficient Balance." });
         }
         catch (Exception ex)
         {
@@ -99,23 +107,18 @@ public class TransactionsController : Controller
     }
 
 
+    [HttpGet]
+    public async Task<IActionResult> History()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return RedirectToAction("Login", "Account"); 
+        }
 
+      
+        var transactions = await _transactionService.GetTransactionsByUserIdAsync(userId);
+        return View(transactions);
+    }
 
-    //// Transaction History Page
-    //[HttpGet]
-    //public async Task<IActionResult> TransactionHistory()
-    //{
-    //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-    //    try
-    //    {
-    //        var transactions = await _requestService.GetRequestsByUserIdAsync(userId);
-    //        return View(transactions);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        TempData["ErrorMessage"] = $"An error occurred while fetching your transaction history: {ex.Message}";
-    //        return RedirectToAction("Index", "Home");
-    //    }
-    //}
 }

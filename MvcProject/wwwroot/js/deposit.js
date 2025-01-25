@@ -12,7 +12,7 @@
             const response = await fetch('/Transactions/Deposit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount: parseFloat(amount) }) // Send as JSON object with "amount"
+                body: JSON.stringify({ amount: parseFloat(amount) }) 
             });
 
             const result = await response.json();

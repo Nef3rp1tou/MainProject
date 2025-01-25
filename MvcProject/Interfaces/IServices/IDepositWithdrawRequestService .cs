@@ -10,8 +10,6 @@ namespace MvcProject.Interfaces.IServices
         Task<DepositWithdrawRequests> GetRequestByIdAsync(Guid id);
         Task UpdateRequestStatusAsync(Guid id, Status status);
         Task<IEnumerable<DepositWithdrawRequests>> GetPendingRequestsAsync();
-        //Task<string> SendDepositToBankingApiAsync(Guid transactionId, decimal amount);
-        //Task SendWithdrawToBankingApiAsync(Guid transactionId, decimal amount, string userId, string accountNumber, string fullName);
-
+       
     }
 }

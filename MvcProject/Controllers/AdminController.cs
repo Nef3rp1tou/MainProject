@@ -21,12 +21,11 @@ namespace MvcProject.Controllers
             _bankingApiService = bankingApiService;
         }
 
-        // Admin Dashboard - Display Pending Requests
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
             var pendingRequests = await _requestService.GetPendingRequestsAsync();
-            return View(pendingRequests); // Pass the pending requests to the view
+            return View(pendingRequests); 
         }
 
         // Approve a Request

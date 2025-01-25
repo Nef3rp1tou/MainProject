@@ -43,7 +43,7 @@ namespace MvcProject.Repositories
         
         public async Task<IEnumerable<DepositWithdrawRequests>> GetPendingRequestsAsync()
         {
-           var sql = "SELECT * FROM DepositWithdrawRequests WHERE Status = @PendingStatus";
+           var sql = "SELECT * FROM DepositWithdrawRequests WHERE Status = @PendingStatus AND TransactionType = 2";
             return await _dbConnection.QueryAsync<DepositWithdrawRequests>(sql, new { PendingStatus = (byte)Status.Pending });
         }
     }

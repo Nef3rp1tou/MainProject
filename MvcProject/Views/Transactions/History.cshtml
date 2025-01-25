@@ -1,0 +1,70 @@
+﻿@model IEnumerable<MvcProject.Models.Transactions>
+@{
+    ViewData["Title"] = "Transaction History";
+}
+
+<h2>Transaction History</h2>
+
+<div>
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate" />
+
+    <label for="endDate">End Date:</label>
+    <input type="date" id="endDate" />
+
+    <button id="filterBtn">Filter</button>
+</div>
+
+<table id="transactionsTable" class="table table-striped">
+    <thead>
+        <tr>
+            <th>Transaction ID</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var transaction in Model)
+        {
+            var amountClass = transaction.Amount < 0 ? "text-danger" : "text-success";
+            var amountSign = transaction.Amount < 0 ? "-" : "+";
+            var absAmount = Math.Abs(transaction.Amount); 
+
+            <tr>
+                <td>@transaction.Id</td>
+                <td class="@amountClass">@amountSign @absAmount</td>
+                <td>@transaction.Status</td>
+                <td>@transaction.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#transactionsTable').DataTable();
+
+            $('#filterBtn').click(function () {
+                var startDate = $('#startDate').val();
+                var endDate = $('#endDate').val();
+
+                var startDateObj = new Date(startDate);
+                var endDateObj = new Date(endDate);
+
+                table.rows().every(function () {
+                    var row = this.node();
+                    var rowDate = new Date($(row).find('td:eq(3)').text());
+
+                    if ((startDate && rowDate < startDateObj) || (endDate && rowDate > endDateObj)) {
+                        $(row).hide();
+                    } else {
+                        $(row).show();
+                    }
+                });
+                table.draw();
+            });
+        });
+    </script>
+}
