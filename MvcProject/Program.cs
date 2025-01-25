@@ -9,6 +9,7 @@ using MvcProject.Services;
 using System.Data;
 using MvcProject.Settings;
 using Microsoft.Extensions.Options;
+using MvcProject.Middleware;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -79,6 +80,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseMiddleware<LoggingMiddleware>();
 
 app.UseRouting();
 

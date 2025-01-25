@@ -14,11 +14,12 @@ namespace MvcProject.Controllers
     {
         private readonly IDepositWithdrawRequestsService _requestService;
         private readonly IBankingApiService _bankingApiService;
-
-        public AdminController(IDepositWithdrawRequestsService requestService, IBankingApiService bankingApiService)
+        private readonly IWalletService _walletService;
+        public AdminController(IDepositWithdrawRequestsService requestService, IBankingApiService bankingApiService, IWalletService walletService)
         {
             _requestService = requestService;
             _bankingApiService = bankingApiService;
+            _walletService = walletService;
         }
 
         [HttpGet]
@@ -40,6 +41,7 @@ namespace MvcProject.Controllers
                 {
                     return Json(new { success = false, message = "Invalid request or already processed." });
                 }
+
                 await _bankingApiService.SendWithdrawRequestAsync(
                     request.Id, request.Amount
                 );
@@ -60,12 +62,15 @@ namespace MvcProject.Controllers
             try
             {
                 var request = await _requestService.GetRequestByIdAsync(requestId);
+                var wallet = await _walletService.GetWalletByUserIdAsync(request.UserId);
 
                 if (request == null || request.TransactionType != TransactionType.Withdraw || request.Status != Status.Pending)
                 {
                     return Json(new { success = false, message = "Invalid request or already processed." });
                 }
-
+                
+                await _walletService.UnblockBalanceAsync(request.UserId, request.Amount);
+                await _walletService.UpdateWalletBalanceAsync(request.UserId, wallet.CurrentBalance + request.Amount);
                 await _requestService.UpdateRequestStatusAsync(requestId, Status.Rejected);
                 return Json(new { success = true, message = "Request rejected successfully!" });
             }

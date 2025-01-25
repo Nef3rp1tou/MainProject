@@ -7,6 +7,7 @@ namespace MvcProject.Interfaces.IRepositories
     {
         Task<Wallet> GetWalletByUserIdAsync(string userId);
         Task CreateWalletAsync(Wallet wallet);
-        Task UpdateWalletBalanceAsync(string userId, decimal newBalance, IDbTransaction transaction = null);
+        Task UpdateWalletBalanceAsync(string userId, decimal newBalance);
+        Task UpdateBlockedBalanceAsync(string userId, decimal newBalance);
     }
 }

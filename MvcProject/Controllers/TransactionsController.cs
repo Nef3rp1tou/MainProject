@@ -13,9 +13,10 @@ public class TransactionsController : Controller
     private readonly IDepositWithdrawRequestsService _requestService;
     private readonly IBankingApiService _bankingApiService;
     private readonly ITransactionService _transactionService;
-    private readonly IWalletRepository _walletService;
+    private readonly IWalletService _walletService;
 
-    public TransactionsController(IDepositWithdrawRequestsService requestService, IBankingApiService bankingApiService, ITransactionService transactionService, IWalletRepository walletService)
+
+    public TransactionsController(IDepositWithdrawRequestsService requestService, IBankingApiService bankingApiService, ITransactionService transactionService, IWalletService walletService)
     {
         _requestService = requestService;
         _bankingApiService = bankingApiService;
@@ -87,6 +88,13 @@ public class TransactionsController : Controller
             if (model.Amount <= wallet.CurrentBalance)
             {
                 var transactionId = Guid.NewGuid();
+
+                var newCurrentBalance = wallet.CurrentBalance - model.Amount;
+                
+
+                await _walletService.UpdateWalletBalanceAsync(userId, newCurrentBalance);
+                await _walletService.BlockBalanceAsync(userId, model.Amount);
+
                 await _requestService.CreateRequestAsync(transactionId, userId, TransactionType.Withdraw, model.Amount);
 
                 return Json(new { success = true, message = "Withdrawal request submitted successfully and is awaiting admin approval." });

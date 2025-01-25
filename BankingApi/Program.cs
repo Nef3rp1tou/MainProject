@@ -1,4 +1,5 @@
 using BankingApi.IServices;
+using BankingApi.Middleware;
 using BankingApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseMiddleware<LoggingMiddleware>();
 
 app.UseAuthorization();
 

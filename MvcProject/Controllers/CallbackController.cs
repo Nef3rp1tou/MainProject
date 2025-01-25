@@ -58,7 +58,6 @@ namespace MvcProject.Controllers
 
                     await _transactionService.CreateTransactionAsync(transaction);
 
-                    // Update wallet balance for deposits
                     if (request.TransactionType == TransactionType.Deposit)
                     {
                         var wallet = await _walletService.GetWalletByUserIdAsync(request.UserId);
@@ -104,12 +103,12 @@ namespace MvcProject.Controllers
                     };
                     await _transactionService.CreateTransactionAsync(transaction);
                     var wallet = await _walletService.GetWalletByUserIdAsync(request.UserId);
-                    if (wallet.CurrentBalance < request.Amount)
+                    if (wallet.BlockedAmount < request.Amount)
                     {
                         return BadRequest("Insufficient funds.");
                     }
-                    var updatedBalance = wallet.CurrentBalance - request.Amount;
-                    await _walletService.UpdateWalletBalanceAsync(request.UserId, updatedBalance);
+                    await _walletService.UnblockBalanceAsync(request.UserId, request.Amount);
+                    
 
                 }
                 return Ok("Callback processed successfully.");

@@ -16,20 +16,48 @@ namespace MvcProject.Repositories
 
         public async Task CreateTransactionAsync(Transactions transaction)
         {
-            var sql = @"
-                INSERT INTO Transactions (Id, UserId, Amount, Status, CreatedAt)
-                VALUES (@Id, @UserId, @Amount, @Status, @CreatedAt)";
+            var sql = "[dbo].[CreateTransaction]";
+            
+            var parameters = new
+            {
+                UserId = transaction.UserId,
+                Amount = transaction.Amount,
+                Status = (byte)transaction.Status
+            };
 
-            transaction.Id = Guid.NewGuid();
-            transaction.CreatedAt = DateTime.UtcNow;
+            try
+            {
+                await _dbConnection.ExecuteAsync(
+                    sql,
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+            }
+            catch (Exception ex)
+            {
 
-            await _dbConnection.ExecuteAsync(sql, transaction);
+                throw new Exception("An error occurred while creating the transaction.", ex);
+            }
         }
 
         public async Task<IEnumerable<Transactions>> GetTransactionsByUserIdAsync(string userId)
         {
-            var sql = "SELECT * FROM Transactions WHERE UserId = @UserId ORDER BY CreatedAt DESC";
-            return await _dbConnection.QueryAsync<Transactions>(sql, new { UserId = userId });
+            var sql = "[dbo].[GetTransactionsByUserId]";
+
+            var parameters = new { UserId = userId };
+
+            try
+            {
+                return await _dbConnection.QueryAsync<Transactions>(
+                    sql,
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while retrieving transactions for the user.", ex);
+            }
         }
     }
 }

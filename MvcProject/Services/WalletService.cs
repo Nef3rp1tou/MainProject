@@ -23,9 +23,7 @@ namespace MvcProject.Services
         {
             var wallet = new Wallet
             {
-                Id = Guid.NewGuid(),
                 UserId = userId,
-                CurrentBalance = 0, // Initial balance
                 Currency = (Enums.Currency)currency
             };
 
@@ -37,13 +35,43 @@ namespace MvcProject.Services
             await _walletRepository.UpdateWalletBalanceAsync(userId, newBalance);
         }
 
-  
-
-        public async Task UnlockBlockedAmountAsync(string userId, decimal amount)
+        public async Task BlockBalanceAsync(string userId, decimal amount)
         {
+            // Get the current wallet state
             var wallet = await _walletRepository.GetWalletByUserIdAsync(userId);
-            var updatedBalance = wallet.CurrentBalance + amount; 
-            await UpdateWalletBalanceAsync(userId, updatedBalance);
+            if (wallet == null)
+            {
+                throw new Exception("Wallet not found.");
+            }
+
+            // Calculate the new blocked balance
+            var newBlockedBalance = wallet.BlockedAmount + amount;
+
+            // Update the blocked balance
+            await _walletRepository.UpdateBlockedBalanceAsync(userId, newBlockedBalance);
         }
+
+        public async Task UnblockBalanceAsync(string userId, decimal amount)
+        {
+            // Get the current wallet state
+            var wallet = await _walletRepository.GetWalletByUserIdAsync(userId);
+            if (wallet == null)
+            {
+                throw new Exception("Wallet not found.");
+            }
+
+            // Ensure there are enough funds in the blocked balance to unblock
+            if (wallet.BlockedAmount < amount)
+            {
+                throw new Exception("Insufficient blocked balance.");
+            }
+
+            // Calculate the new blocked balance
+            var newBlockedBalance = wallet.BlockedAmount - amount;
+
+            // Update the blocked balance
+            await _walletRepository.UpdateBlockedBalanceAsync(userId, newBlockedBalance);
+        }
+
     }
 }

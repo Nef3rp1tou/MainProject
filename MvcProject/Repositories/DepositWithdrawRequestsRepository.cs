@@ -12,11 +12,29 @@ namespace MvcProject.Repositories
 
         public async Task CreateRequestAsync(DepositWithdrawRequests request)
         {
-            var sql = @"
-            INSERT INTO DepositWithdrawRequests (Id, UserId, TransactionType, Amount, Status, CreatedAt)
-            VALUES (@Id, @UserId, @TransactionType, @Amount, @Status, @CreatedAt)";
+            var sql = "[dbo].[CreateDepositWithdrawRequest]";
 
-            await _dbConnection.ExecuteAsync(sql, request);
+            var parameters = new
+            {
+                Id = request.Id,
+                UserId = request.UserId,
+                TransactionType = (byte)request.TransactionType,
+                Amount = request.Amount,
+                Status = request.Status
+            };
+
+            try
+            {
+                await _dbConnection.ExecuteAsync(
+                    sql,
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while creating the deposit/withdraw request.", ex);
+            }
         }
 
         public async Task<IEnumerable<DepositWithdrawRequests>> GetRequestsByUserIdAsync(string userId)
@@ -28,22 +46,36 @@ namespace MvcProject.Repositories
         public async Task<DepositWithdrawRequests> GetRequestByIdAsync(Guid id)
         {
             var sql = "SELECT * FROM DepositWithdrawRequests WHERE Id = @Id";
-            return await _dbConnection.QuerySingleOrDefaultAsync<DepositWithdrawRequests>(sql, new { Id = id });
+            var result = await _dbConnection.QuerySingleOrDefaultAsync<DepositWithdrawRequests>(sql, new { Id = id });
+            return result;
         }
 
         public async Task UpdateRequestStatusAsync(Guid id, Status status)
         {
-            var sql = @"
-                UPDATE DepositWithdrawRequests
-                SET Status = @Status
-                WHERE Id = @Id";
-            await _dbConnection.ExecuteAsync(sql, new { Status = (byte)status, Id = id });
+            var sql = "[dbo].[spUpdateRequestStatus]";
+            var parameters = new
+            {
+                Id = id,
+                NewStatus = (byte)status
+            };
 
+            try
+            {
+                await _dbConnection.ExecuteAsync(
+                sql,
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("There was a problem with updating request status: ", ex);
+            }
         }
-        
+
         public async Task<IEnumerable<DepositWithdrawRequests>> GetPendingRequestsAsync()
         {
-           var sql = "SELECT * FROM DepositWithdrawRequests WHERE Status = @PendingStatus AND TransactionType = 2";
+            var sql = "SELECT * FROM DepositWithdrawRequests WHERE Status = @PendingStatus AND TransactionType = 2";
             return await _dbConnection.QueryAsync<DepositWithdrawRequests>(sql, new { PendingStatus = (byte)Status.Pending });
         }
     }

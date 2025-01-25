@@ -22,26 +22,65 @@ namespace MvcProject.Repositories
 
         public async Task CreateWalletAsync(Wallet wallet)
         {
-            var sql = @"INSERT INTO Wallet (Id, UserId, CurrentBalance, Currency)
-                    VALUES (@Id, @UserId, @CurrentBalance, @Currency)";
-            wallet.Id = Guid.NewGuid();
-            await _dbConnection.ExecuteAsync(sql, wallet);
+            var sql = "[dbo].[CreateWallet]";
+
+            var parameters = new
+            {
+                UserId = wallet.UserId,
+                Currency = (byte)wallet.Currency
+            };
+
+            try
+            {
+                await _dbConnection.ExecuteAsync(
+                    sql,
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while creating the wallet.", ex);
+            }
         }
 
-        public async Task UpdateWalletBalanceAsync(string userId, decimal newBalance, IDbTransaction transaction = null)
+        public async Task UpdateWalletBalanceAsync(string userId, decimal newBalance)
         {
-            var sql = @"
-        UPDATE Wallet 
-        SET CurrentBalance = @NewBalance 
-        WHERE UserId = @UserId";
+            var sql = "[dbo].[UpdateWallet]";
 
-            if (transaction == null)
+            var parameter = new
             {
-                await _dbConnection.ExecuteAsync(sql, new { NewBalance = newBalance, UserId = userId });
+                UserId = userId,
+                NewBalance = newBalance
+            };
+            try
+            {
+                await _dbConnection.ExecuteAsync(sql,parameter, commandType: CommandType.StoredProcedure);
+
             }
-            else
+            catch (Exception ex)
             {
-                await _dbConnection.ExecuteAsync(sql, new { NewBalance = newBalance, UserId = userId }, transaction);
+
+                throw new Exception("An error occurred while updating the wallet balance.", ex);
+            }
+        }
+
+        public async Task UpdateBlockedBalanceAsync(string userId, decimal newBalance)
+        {
+            var procedureName = "[dbo].[UpdateBlockedBalance]";
+            var parameters = new
+            {
+                UserId = userId,
+                NewBalance = newBalance
+            };
+
+            try
+            {
+                await _dbConnection.ExecuteAsync(procedureName, parameters, commandType: CommandType.StoredProcedure);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while updating the wallet's blocked balance.", ex);
             }
         }
 

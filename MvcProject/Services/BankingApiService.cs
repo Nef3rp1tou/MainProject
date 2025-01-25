@@ -60,7 +60,7 @@ namespace MvcProject.Services
                 var request = new
                 {
                     TransactionId = transactionId,
-                    Amount = (int)(amount * 100),
+                    Amount = (int)(amount),
                     MerchantId = Guid.Parse(_config.MerchantId),
                     Hash = hash
                 };
