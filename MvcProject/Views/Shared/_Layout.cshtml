@@ -7,13 +7,114 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/MvcProject.styles.css" asp-append-version="true" />
-
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" />
+    <style>
+        :root {
+            --primary-teal: #2A9D8F;
+            --secondary-teal: #264653;
+            --accent-purple: #6B48FF;
+            --light-teal: #E9F5F4;
+            --white: #FFFFFF;
+        }
 
+        body {
+            background-color: var(--light-teal);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--white) !important;
+            padding: 1rem;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .navbar-brand {
+            color: var(--secondary-teal) !important;
+            font-weight: 600;
+            font-size: 1.4rem;
+        }
+
+        .nav-link {
+            color: var(--secondary-teal) !important;
+            border-radius: 8px;
+            padding: 0.5rem 1rem !important;
+            margin: 0 0.2rem;
+            transition: all 0.3s ease;
+        }
+
+            .nav-link:hover {
+                background-color: var(--light-teal);
+                color: var(--primary-teal) !important;
+            }
+
+        .btn-primary {
+            background-color: var(--primary-teal);
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1.5rem;
+        }
+
+            .btn-primary:hover {
+                background-color: var(--secondary-teal);
+            }
+
+        #wallet-balance {
+            background-color: var(--light-teal);
+            border-radius: 8px;
+            padding: 0.5rem 1rem !important;
+            color: var(--primary-teal) !important;
+            font-weight: 500;
+        }
+
+        .btn-link {
+            color: var(--accent-purple) !important;
+            text-decoration: none;
+        }
+
+            .btn-link:hover {
+                color: var(--primary-teal) !important;
+            }
+
+        .container {
+            background-color: var(--white);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .footer {
+            background-color: var(--white);
+            padding: 1.5rem 0;
+            margin-top: 3rem;
+        }
+
+            .footer a {
+                color: var(--primary-teal);
+                text-decoration: none;
+            }
+
+                .footer a:hover {
+                    color: var(--accent-purple);
+                }
+
+        .navbar-nav.ms-auto .nav-link {
+            border: 1px solid transparent;
+        }
+
+        .navbar-nav.ms-auto .nav-item:last-child .nav-link {
+            background-color: var(--primary-teal);
+            color: var(--white) !important;
+        }
+
+            .navbar-nav.ms-auto .nav-item:last-child .nav-link:hover {
+                background-color: var(--secondary-teal);
+            }
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-light border-bottom mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MvcProject</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -23,29 +124,27 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                         @if (User.IsInRole("Player"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Transactions" asp-action="Deposit">Deposit</a>
+                                <a class="nav-link" asp-area="" asp-controller="Transactions" asp-action="Deposit">Deposit</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Transactions" asp-action="Withdraw">Withdraw</a>
+                                <a class="nav-link" asp-area="" asp-controller="Transactions" asp-action="Withdraw">Withdraw</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Transactions" asp-action="History">Transaction History</a>
                             </li>
-
                         }
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Admin" asp-action="Dashboard">Admin Panel</a>
-
+                                <a class="nav-link" asp-controller="Admin" asp-action="Dashboard">Admin Panel</a>
                             </li>
                         }
                     </ul>
@@ -53,24 +152,24 @@
                         @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark">Welcome, @User.Identity.Name</a>
+                                <a class="nav-link">Welcome, @User.Identity.Name</a>
                             </li>
                             <li class="nav-item">
-                                <span class="nav-link text-dark" id="wallet-balance">Balance: Loading...</span>
+                                <span class="nav-link" id="wallet-balance">Balance: Loading...</span>
                             </li>
                             <li class="nav-item">
                                 <form id="logout-form" method="post" asp-area="Identity" asp-page="/Account/Logout">
-                                    <button type="submit" class="btn btn-link nav-link text-dark">Logout</button>
+                                    <button type="submit" class="btn btn-link nav-link">Logout</button>
                                 </form>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
+                                <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
+                                <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">Register</a>
                             </li>
                         }
                     </ul>
@@ -89,11 +188,10 @@
             &copy; 2025 - MvcProject - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/wallet.js" asp-append-version="true"></script>
 

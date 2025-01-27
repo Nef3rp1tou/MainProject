@@ -1,41 +1,164 @@
 ﻿@{
     ViewData["Title"] = "Admin Dashboard";
 }
-
 @model IEnumerable<MvcProject.Models.DepositWithdrawRequests>
 
-<h2>Admin Panel</h2>
+<style>
+    :root {
+        --primary-teal: #2A9D8F;
+        --secondary-teal: #264653;
+        --accent-purple: #6B48FF;
+        --light-teal: #E9F5F4;
+        --white: #FFFFFF;
+        --success-green: #2A9D8F;
+        --danger-red: #E76F51;
+    }
 
-<div class="table-responsive">
-    <table class="table table-bordered" id="pending-requests">
-        <thead>
-            <tr>
-                <th>User</th>
-                <th>Amount</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Created At</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var request in Model)
-            {
+    .admin-container {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 100px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    h2 {
+        color: var(--secondary-teal);
+        margin-bottom: 30px;
+        font-weight: 600;
+    }
+
+    .table-responsive {
+        margin-bottom: 20px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    #pending-requests {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+    }
+
+        #pending-requests thead th {
+            background-color: var(--secondary-teal);
+            color: var(--white);
+            padding: 15px;
+            font-weight: 500;
+            border: none;
+        }
+
+        #pending-requests tbody td {
+            padding: 12px 15px;
+            border-color: #f0f0f0;
+            vertical-align: middle;
+        }
+
+        #pending-requests tbody tr:hover {
+            background-color: var(--light-teal);
+        }
+
+    .btn-success {
+        background-color: var(--success-green);
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        margin-right: 5px;
+    }
+
+        .btn-success:hover {
+            background-color: var(--secondary-teal);
+            transform: translateY(-1px);
+        }
+
+    .btn-danger {
+        background-color: var(--danger-red);
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-danger:hover {
+            background-color: #c65d43;
+            transform: translateY(-1px);
+        }
+
+    /* DataTables customization */
+    .dataTables_wrapper .dataTables_length select,
+    .dataTables_wrapper .dataTables_filter input {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 0.4rem;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: var(--primary-teal) !important;
+        color: white !important;
+        border: none;
+        border-radius: 6px;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background: var(--light-teal) !important;
+        border: 1px solid var(--primary-teal);
+        color: var(--primary-teal) !important;
+    }
+</style>
+
+<div class="admin-container">
+    <h2>Admin Panel</h2>
+    <div class="table-responsive">
+        <table class="table" id="pending-requests">
+            <thead>
                 <tr>
-                    <td>@request.UserId</td>
-                    <td>@request.Amount</td>
-                    <td>@request.TransactionType</td>
-                    <td>@request.Status</td>
-                    <td>@request.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
-                    <td>
-                        <button class="btn btn-success btn-sm approve-request" data-id="@request.Id">Approve</button>
-                        <button class="btn btn-danger btn-sm reject-request" data-id="@request.Id">Reject</button>
-                    </td>
+                    <th>User</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var request in Model)
+                {
+                    <tr>
+                        <td>@request.UserId</td>
+                        <td>$@request.Amount.ToString("F2")</td>
+                        <td>@request.TransactionType</td>
+                        <td>
+                            <span class="badge @(request.Status == MvcProject.Enums.Status.Pending ? "bg-warning" :
+                                               request.Status == MvcProject.Enums.Status.Success ? "bg-success" : "bg-danger")">
+                                @request.Status
+                            </span>
+                        </td>
+                        <td>@request.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>
+                            <button class="btn btn-success btn-sm approve-request" data-id="@request.Id">Approve</button>
+                            <button class="btn btn-danger btn-sm reject-request" data-id="@request.Id">Reject</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
+
 @section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#pending-requests').DataTable({
+                responsive: true,
+                pageLength: 10,
+                order: [[4, 'desc']],
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search requests..."
+                }
+            });
+        });
+    </script>
     <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
 }

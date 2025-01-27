@@ -4,14 +4,11 @@
     $confirmButton.click(function (e) {
         e.preventDefault();
 
-        // Extract values from the button's data attributes
         const transactionId = $confirmButton.data('transaction-id');
         const amount = $confirmButton.data('amount');
 
-        // Disable button to prevent multiple clicks
         $confirmButton.prop('disabled', true);
 
-        // Send AJAX request to Payment Controller
         $.ajax({
             url: '/payment/senddepositfinish',
             type: 'POST',
@@ -21,7 +18,7 @@
             success: function (response) {
                 if (response && response.status === 2) {
                     alert('Payment completed successfully!');
-                    window.location.href = '/home/index'; // Redirect to history page
+                    window.location.href = '/home/index'; 
                 } else {
                     alert('Payment failed. Please try again.');
                 }
@@ -32,7 +29,6 @@
                 alert(errorMessage);
             },
             complete: function () {
-                // Re-enable button
                 $confirmButton.prop('disabled', false);
             }
         });

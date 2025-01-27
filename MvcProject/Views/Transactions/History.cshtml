@@ -3,66 +3,182 @@
     ViewData["Title"] = "Transaction History";
 }
 
-<h2>Transaction History</h2>
+<style>
+    :root {
+        --primary-teal: #2A9D8F;
+        --secondary-teal: #264653;
+        --accent-purple: #6B48FF;
+        --light-teal: #E9F5F4;
+        --white: #FFFFFF;
+        --success-green: #2A9D8F;
+        --danger-red: #E76F51;
+    }
 
-<div>
-    <label for="startDate">Start Date:</label>
-    <input type="date" id="startDate" />
+    .container.mt-4 {
+        margin-bottom: 100px;
+    }
 
-    <label for="endDate">End Date:</label>
-    <input type="date" id="endDate" />
+    .card {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+    }
 
-    <button id="filterBtn">Filter</button>
-</div>
+    .card-header {
+        background-color: var(--primary-teal) !important;
+        border-bottom: none;
+        padding: 1.5rem;
+    }
 
-<table id="transactionsTable" class="table table-striped">
-    <thead>
-        <tr>
-            <th>Transaction ID</th>
-            <th>Amount</th>
-            <th>Status</th>
-            <th>Date</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var transaction in Model)
-        {
-            var amountClass = transaction.Amount < 0 ? "text-danger" : "text-success";
-            var amountSign = transaction.Amount < 0 ? "-" : "+";
-            var absAmount = Math.Abs(transaction.Amount); 
+    .table-responsive {
+        margin-bottom: 20px;
+        min-height: 300px;
+    }
 
-            <tr>
-                <td>@transaction.Id</td>
-                <td class="@amountClass">@amountSign @absAmount</td>
-                <td>@transaction.Status</td>
-                <td>@transaction.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
-            </tr>
+    .dataTables_wrapper {
+        padding-bottom: 50px;
+    }
+
+    .dataTables_info {
+        margin-top: 15px;
+    }
+
+    .dataTables_paginate {
+        margin-top: 15px !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        padding: 0.5em 1em;
+        margin: 0 2px;
+        border-radius: 6px;
+    }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background: var(--primary-teal) !important;
+            color: white !important;
+            border: none;
         }
-    </tbody>
-</table>
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: var(--light-teal) !important;
+            border: 1px solid var(--primary-teal);
+            color: var(--primary-teal) !important;
+        }
+
+    .dataTables_wrapper .dataTables_filter {
+        margin-bottom: 1rem;
+    }
+
+        .dataTables_wrapper .dataTables_filter input {
+            margin-left: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 0.4rem 0.8rem;
+        }
+</style>
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h4 class="mb-0 text-white">Transaction History</h4>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4 g-3">
+                <div class="col-md-4">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" id="startDate" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" id="endDate" class="form-control" />
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button id="filterBtn" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-2"></i>Apply Filter
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="transactionsTable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var transaction in Model)
+                        {
+                            var amountClass = transaction.Amount < 0 ? "text-danger" : "text-success";
+                            var amountSign = transaction.Amount < 0 ? "-" : "+";
+                            var absAmount = Math.Abs(transaction.Amount).ToString("F2");
+
+                            <tr>
+                                <td>@transaction.Id</td>
+                                <td class="@amountClass fw-medium">@amountSign $@absAmount</td>
+                                <td>
+                                    @if (transaction.Status == MvcProject.Enums.Status.Success)
+                                    {
+                                        <span class="badge bg-success">Completed</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Failed</span>
+                                    }
+                                </td>
+                                <td>@transaction.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>
         $(document).ready(function () {
-            var table = $('#transactionsTable').DataTable();
+            var table = $('#transactionsTable').DataTable({
+                responsive: true,
+                pageLength: 10,
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search transactions..."
+                },
+                order: [[3, 'desc']], 
+                columnDefs: [
+                    { targets: [1], className: 'fw-medium' }
+                ]
+            });
 
             $('#filterBtn').click(function () {
                 var startDate = $('#startDate').val();
                 var endDate = $('#endDate').val();
 
-                var startDateObj = new Date(startDate);
-                var endDateObj = new Date(endDate);
+                if (startDate || endDate) {
+                    var startDateObj = startDate ? new Date(startDate) : null;
+                    var endDateObj = endDate ? new Date(endDate) : null;
 
-                table.rows().every(function () {
-                    var row = this.node();
-                    var rowDate = new Date($(row).find('td:eq(3)').text());
+                    table.rows().every(function () {
+                        var row = this.node();
+                        var rowDate = new Date($(row).find('td:eq(3)').text());
 
-                    if ((startDate && rowDate < startDateObj) || (endDate && rowDate > endDateObj)) {
-                        $(row).hide();
-                    } else {
-                        $(row).show();
-                    }
-                });
+                        if ((startDateObj && rowDate < startDateObj) || (endDateObj && rowDate > endDateObj)) {
+                            $(row).hide();
+                        } else {
+                            $(row).show();
+                        }
+                    });
+                } else {
+                    table.rows().every(function () {
+                        $(this.node()).show();
+                    });
+                }
                 table.draw();
             });
         });

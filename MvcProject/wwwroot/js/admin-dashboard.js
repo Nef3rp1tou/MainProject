@@ -21,7 +21,6 @@
         });
     });
 
-    // Reject request
     $(document).on('click', '.reject-request', function () {
         const requestId = $(this).data('id');
         $.ajax({
