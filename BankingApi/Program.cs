@@ -1,21 +1,25 @@
+using log4net;
+using log4net.Config;
+using System.Reflection;
 using BankingApi.IServices;
 using BankingApi.Middleware;
 using BankingApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Load log4net configuration
+var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
 builder.Services.AddControllers(); 
 builder.Services.AddEndpointsApiExplorer(); 
 builder.Services.AddSwaggerGen(); 
 
-// Register application services
 builder.Services.AddHttpClient<ICallbackService, CallbackService>(); 
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(); 
@@ -24,7 +28,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseMiddleware<LoggingMiddleware>();
+app.UseMiddleware<LoggingMiddleware>(); // Uses modified log4net-based middleware
 
 app.UseAuthorization();
 

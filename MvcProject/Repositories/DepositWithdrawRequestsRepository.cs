@@ -10,18 +10,59 @@ namespace MvcProject.Repositories
     {
         private readonly IDbConnection _dbConnection = dbConnection;
 
-        public async Task CreateRequestAsync(DepositWithdrawRequests request)
+        public async Task RegisterDepositRequestAsync(DepositWithdrawRequests request)
         {
-            var sql = "[dbo].[CreateDepositWithdrawRequest]";
+            var sql = "[dbo].[spRegisterDeposit]";
 
-            var parameters = new
+            var parameters = new DynamicParameters();
+
+            parameters.Add("@Id", request.Id);
+            parameters.Add("@UserId", request.UserId);
+            parameters.Add("@Amount", request.Amount);
+            try
             {
-                Id = request.Id,
-                UserId = request.UserId,
-                TransactionType = (byte)request.TransactionType,
-                Amount = request.Amount,
-                Status = request.Status
-            };
+                await _dbConnection.ExecuteAsync(
+                    sql,
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while creating the deposit request.", ex);
+            }
+
+            }
+
+        public async Task RegisterWithdrawRequestAsync(DepositWithdrawRequests request)
+        {
+            var sql = "[dbo].[spRegisterWithdraw]";
+            var parameters = new DynamicParameters();
+            parameters.Add("@Id", request.Id);
+            parameters.Add("@UserId", request.UserId);
+            parameters.Add("@Amount", request.Amount);
+            try
+            {
+                await _dbConnection.ExecuteAsync(
+                    sql,
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while creating the withdraw request.", ex);
+            }
+        }
+
+        public async Task RejectRequestAsync(DepositWithdrawRequests requests)
+        {
+            var sql = "[dbo].[spRejectRequest]";
+            var parameters = new DynamicParameters();
+            parameters.Add("@Id", requests.Id);
+            parameters.Add("@UserId", requests.UserId);
+            parameters.Add("@Amount", requests.Amount);
+            parameters.Add("@TransactionType", requests.TransactionType);
 
             try
             {
@@ -33,8 +74,11 @@ namespace MvcProject.Repositories
             }
             catch (Exception ex)
             {
-                throw new Exception("An error occurred while creating the deposit/withdraw request.", ex);
+                throw new Exception("An error occurred while rejecting the request.", ex);
             }
+
+
+
         }
 
         public async Task<IEnumerable<DepositWithdrawRequests>> GetRequestsByUserIdAsync(string userId)
@@ -46,32 +90,9 @@ namespace MvcProject.Repositories
         public async Task<DepositWithdrawRequests> GetRequestByIdAsync(Guid id)
         {
             var sql = "SELECT * FROM DepositWithdrawRequests WHERE Id = @Id";
-            var result = await _dbConnection.QuerySingleOrDefaultAsync<DepositWithdrawRequests>(sql, new { Id = id });
-            return result;
+            return await _dbConnection.QuerySingleOrDefaultAsync<DepositWithdrawRequests>(sql, new { Id = id }); ;
         }
 
-        public async Task UpdateRequestStatusAsync(Guid id, Status status)
-        {
-            var sql = "[dbo].[spUpdateRequestStatus]";
-            var parameters = new
-            {
-                Id = id,
-                NewStatus = (byte)status
-            };
-
-            try
-            {
-                await _dbConnection.ExecuteAsync(
-                sql,
-                parameters,
-                commandType: CommandType.StoredProcedure
-            );
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("There was a problem with updating request status: ", ex);
-            }
-        }
 
         public async Task<IEnumerable<DepositWithdrawRequests>> GetPendingRequestsAsync()
         {

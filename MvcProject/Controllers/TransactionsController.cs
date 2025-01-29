@@ -53,7 +53,7 @@ public class TransactionsController : Controller
         {
             var transactionId = Guid.NewGuid();
 
-            await _requestService.CreateRequestAsync(transactionId, userId, TransactionType.Deposit, amount);
+            await _requestService.RegisterDepositRequestAsync(transactionId, userId, amount);
 
             var response = _bankingApiService.SendDepositRequestAsync(transactionId, amount);
 
@@ -89,13 +89,7 @@ public class TransactionsController : Controller
             {
                 var transactionId = Guid.NewGuid();
 
-                var newCurrentBalance = wallet.CurrentBalance - model.Amount;
-                
-
-                await _walletService.UpdateWalletBalanceAsync(userId, newCurrentBalance);
-                await _walletService.BlockBalanceAsync(userId, model.Amount);
-
-                await _requestService.CreateRequestAsync(transactionId, userId, TransactionType.Withdraw, model.Amount);
+               await _requestService.RegisterWithdrawRequestAsync(transactionId, userId, model.Amount);
 
                 return Json(new { success = true, message = "Withdrawal request submitted successfully and is awaiting admin approval." });
             }

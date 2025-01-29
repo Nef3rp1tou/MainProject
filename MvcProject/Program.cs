@@ -1,3 +1,6 @@
+using log4net;
+using log4net.Config;
+using System.Reflection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
@@ -11,8 +14,11 @@ using MvcProject.Settings;
 using Microsoft.Extensions.Options;
 using MvcProject.Middleware;
 
-
 var builder = WebApplication.CreateBuilder(args);
+
+// Load log4net configuration
+var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
 
 var connectionString = builder.Configuration.GetConnectionString("MvcProjectContextConnection")
     ?? throw new InvalidOperationException("Connection string 'MvcProjectContextConnection' not found.");
@@ -32,7 +38,6 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IBankingApiService, BankingApiService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 
 builder.Services.Configure<BankingApiConfig>(builder.Configuration.GetSection("BankingApi"));
 builder.Services.AddSingleton(resolver =>
@@ -69,19 +74,18 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
-
 }
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-app.UseMiddleware<LoggingMiddleware>();
+app.UseMiddleware<LoggingMiddleware>(); // Uses log4net-based middleware
 
 app.UseRouting();
 

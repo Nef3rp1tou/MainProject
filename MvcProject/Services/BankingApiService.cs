@@ -1,14 +1,11 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MvcProject.DTOs;
 using MvcProject.Enums;
 using MvcProject.Interfaces.IServices;
 using MvcProject.Models;
 using MvcProject.Settings;
-using System.Security.Cryptography;
-using System.Security.Policy;
-using System.Text;
+using MvcProject.Utilities;
+using System.Net.Http.Json;
 
 namespace MvcProject.Services
 {
@@ -21,105 +18,50 @@ namespace MvcProject.Services
         {
             _config = config;
             _httpClient = httpClient;
-
         }
 
-        public async Task<ApiResponse> SendDepositRequestAsync(Guid transactionId, decimal amount)
+        private object CreateRequest(Guid transactionId, decimal amount)
         {
-            try
+            var amountInCents = (int)(amount * 100);
+            var hashData = $"{amountInCents}{_config.MerchantId}{transactionId}{_config.SecretKey}";
+
+            return new
             {
-                var dataToHash = $"{(int)amount * 100}{_config.MerchantId}{transactionId}{_config.SecretKey}";
-                var hash = GenerateHash(dataToHash);
-
-                var request = new
-                {
-                    TransactionId = transactionId,
-                    Amount = (int)(amount * 100),
-                    MerchantId = Guid.Parse(_config.MerchantId),
-                    Hash = hash
-                };
-
-                var response = await _httpClient.PostAsJsonAsync($"{_config.BaseUrl}/deposit", request);
-
-                response.EnsureSuccessStatusCode();
-
-                return await response.Content.ReadFromJsonAsync<ApiResponse>();
-            }
-             catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+                TransactionId = transactionId,
+                Amount = amountInCents,
+                MerchantId = Guid.Parse(_config.MerchantId),
+                Hash = HashHelper.GenerateHash(hashData) 
+            };
         }
-        public async Task<DepositFinishRequestDto> SendDepositFinishRequestAsync(Guid transactionId, decimal amount)
+
+        private async Task<T> PostRequestAsync<T>(string endpoint, object request)
         {
-            try
+            var response = await _httpClient.PostAsJsonAsync($"{_config.BaseUrl}/{endpoint}", request);
+
+            var result = await response.Content.ReadFromJsonAsync<T>() ?? throw new Exception("Failed to deserialize response.");
+
+            var statusProperty = typeof(T).GetProperty("Status");
+            if (statusProperty != null)
             {
-                var dataToHash = $"{(int)amount * 100}{_config.MerchantId}{transactionId}{_config.SecretKey}";
-                var hash = GenerateHash(dataToHash);
-
-                var request = new
-                {
-                    TransactionId = transactionId,
-                    Amount = (int)(amount),
-                    MerchantId = Guid.Parse(_config.MerchantId),
-                    Hash = hash
-                };
-
-                var response = await _httpClient.PostAsJsonAsync($"{_config.BaseUrl}/deposit-finish", request);
-
-                response.EnsureSuccessStatusCode();
-
-                return await response.Content.ReadFromJsonAsync<DepositFinishRequestDto>();
+                var status = (Status)(statusProperty.GetValue(result) ?? throw new InvalidOperationException("Status property is null."));
+                if (status == Status.Rejected)
+                    throw new Exception("Bank rejected the transaction.");
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            response.EnsureSuccessStatusCode();
+            return result;
         }
 
+        public Task<ApiResponse> SendDepositRequestAsync(Guid transactionId, decimal amount) =>
+            PostRequestAsync<ApiResponse>("deposit", CreateRequest(transactionId, amount));
 
+        public Task<DepositFinishRequestDto> SendDepositFinishRequestAsync(Guid transactionId, decimal amount) =>
+            PostRequestAsync<DepositFinishRequestDto>("deposit-finish", CreateRequest(transactionId, amount));
 
+        public Task<WithdrawRequestDto> SendWithdrawRequestAsync(Guid transactionId, decimal amount) =>
+            PostRequestAsync<WithdrawRequestDto>("withdraw", CreateRequest(transactionId, amount));
 
-        public async Task<WithdrawRequestDto> SendWithdrawRequestAsync(Guid transactionId, decimal amount)
-        {
-            try
-            {
-                var dataToHash = $"{(int)amount * 100}{_config.MerchantId}{transactionId}{_config.SecretKey}";
-                var hash = GenerateHash(dataToHash);
-
-                var request = new
-                {
-                    TransactionId = transactionId,
-                    Amount = (int)(amount * 100),
-                    MerchantId = Guid.Parse(_config.MerchantId),
-                    Hash = hash
-                };
-
-                var response = await _httpClient.PostAsJsonAsync($"{_config.BaseUrl}/withdraw", request);
-                return await response.Content.ReadFromJsonAsync<WithdrawRequestDto>();
-
-            }
-            catch (Exception ex)
-            {
-
-                throw new Exception(ex.Message);
-            }
-
-        }
-
-        public bool ValidateHash(string receivedHash, string expectedData)
-        {
-            var exceptedHash = GenerateHash(expectedData);
-            return string.Equals(exceptedHash, receivedHash, StringComparison.OrdinalIgnoreCase);
-
-
-        }
-        private string GenerateHash(string input)
-        {
-            using var sha256 = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(input);
-            var hash = sha256.ComputeHash(bytes);
-            return BitConverter.ToString(hash).Replace("-", "").ToLower();
-        }
+        public bool ValidateHash(string receivedHash, string expectedData) =>
+            HashHelper.ValidateHash(receivedHash, expectedData);
     }
+
 }

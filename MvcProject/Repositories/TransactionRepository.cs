@@ -14,16 +14,38 @@ namespace MvcProject.Repositories
             _dbConnection = dbConnection;
         }
 
-        public async Task CreateTransactionAsync(Transactions transaction)
+        public async Task DepositAsync(Transactions transaction)
         {
-            var sql = "[dbo].[CreateTransaction]";
-            
-            var parameters = new
+            var sql = "[dbo].[spDeposit]";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@Id", transaction.Id);
+            parameters.Add("@UserId", transaction.UserId);
+            parameters.Add("@TransactionType", transaction.TransactionType);
+            parameters.Add("@Amount", transaction.Amount);
+            try
             {
-                UserId = transaction.UserId,
-                Amount = transaction.Amount,
-                Status = (byte)transaction.Status
-            };
+                await _dbConnection.ExecuteAsync(
+                    sql,
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while creating the transaction.", ex);
+            }
+        }
+        public async Task WithdrawAsync(Transactions transaction)
+        {
+            var sql = "[dbo].[spWithdraw]";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@Id", transaction.Id);
+            parameters.Add("@UserId", transaction.UserId);
+            parameters.Add("@TransactionType", transaction.TransactionType);
+            parameters.Add("@Amount", transaction.Amount);
+            parameters.Add("@Status", transaction.Status); 
 
             try
             {
@@ -35,29 +57,14 @@ namespace MvcProject.Repositories
             }
             catch (Exception ex)
             {
-
                 throw new Exception("An error occurred while creating the transaction.", ex);
             }
         }
 
         public async Task<IEnumerable<Transactions>> GetTransactionsByUserIdAsync(string userId)
         {
-            var sql = "[dbo].[GetTransactionsByUserId]";
-
-            var parameters = new { UserId = userId };
-
-            try
-            {
-                return await _dbConnection.QueryAsync<Transactions>(
-                    sql,
-                    parameters,
-                    commandType: CommandType.StoredProcedure
-                );
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("An error occurred while retrieving transactions for the user.", ex);
-            }
+            var sql = "SELECT * FROM Transactions WHERE UserId = @UserId";
+            return await _dbConnection.QueryAsync<Transactions>(sql, new { UserId = userId });
         }
     }
 }

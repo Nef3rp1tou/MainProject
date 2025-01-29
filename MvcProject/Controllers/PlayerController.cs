@@ -10,11 +10,7 @@ namespace MvcProject.Controllers
         {
             return View();
         }
-        // Placeholder for future admin functionality
-        public IActionResult ManageUsers()
-        {
-            return View();
-        }
+
     }
 
 }

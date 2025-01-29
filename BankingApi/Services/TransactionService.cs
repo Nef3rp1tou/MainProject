@@ -4,21 +4,22 @@ using System.Text;
 using BankingApi.DTOs;
 using BankingApi.Enums;
 using BankingApi.IServices;
+using BankingApi.Utilities;
 
 namespace BankingApi.Services;
 
 public class TransactionService : ITransactionService
 {
     private readonly string _secretKey;
-
+    private readonly string _paymentUrl;
     public TransactionService(IConfiguration configuration)
     {
-        // Retrieve the secret key from the appsettings.json
         _secretKey = configuration["Security:SecretKey"] ?? throw new ArgumentNullException(nameof(configuration), "Secret key cannot be null");
+        _paymentUrl = configuration["Payment:PaymentUrl"] ?? throw new ArgumentNullException(nameof(configuration), "Payment url cannot be null");
     }
     public async Task<DepositResponseDto> Deposit(DepositRequestDto depositRequestDto)
     {
-        if (!ValidateTheHash(depositRequestDto.Hash, depositRequestDto.TransactionId, depositRequestDto.Amount, depositRequestDto.MerchantId))
+        if (!ValidationHelper.ValidateTheHash(depositRequestDto.Hash, depositRequestDto.TransactionId, depositRequestDto.Amount, depositRequestDto.MerchantId, _secretKey))
         {
             return new DepositResponseDto()
             {
@@ -27,18 +28,18 @@ public class TransactionService : ITransactionService
             };
         }
 
-        var isEven = await Task.Run(() => IsEven(depositRequestDto.Amount));
+        var isEven = await Task.Run(() => ValidationHelper.IsEven(depositRequestDto.Amount));
 
         return new DepositResponseDto()
         {
             Status = isEven ? Status.Success : Status.Rejected,
-            PaymentUrl = isEven ? $"https://localhost:7038/payment/dummy?transactionId={depositRequestDto.TransactionId}&amount={depositRequestDto.Amount}" : string.Empty
+            PaymentUrl = isEven ? $"{_paymentUrl}{depositRequestDto.TransactionId}&amount={depositRequestDto.Amount}" : string.Empty
         };
     }
 
     public async Task<WithdrawResponseDto> Withdraw(WithdrawRequestDto withdrawRequestDto)
     {
-        if (!ValidateTheHash(withdrawRequestDto.Hash, withdrawRequestDto.TransactionId, withdrawRequestDto.Amount, withdrawRequestDto.MerchantId))
+        if (!ValidationHelper.ValidateTheHash(withdrawRequestDto.Hash, withdrawRequestDto.TransactionId, withdrawRequestDto.Amount, withdrawRequestDto.MerchantId, _secretKey))
         {
             return new WithdrawResponseDto()
             {
@@ -48,7 +49,7 @@ public class TransactionService : ITransactionService
             };
         }
 
-        var isEven = await Task.Run(() => IsEven(withdrawRequestDto.Amount));
+        var isEven = await Task.Run(() => ValidationHelper.IsEven(withdrawRequestDto.Amount));
 
         return new WithdrawResponseDto()
         {
@@ -58,21 +59,5 @@ public class TransactionService : ITransactionService
         };
     }
     
-    private bool IsEven(int number)
-    {
-        return number % 2 == 0;
-    }
-
-    private bool ValidateTheHash(string hash, Guid transactionId, int amount, Guid merchantId)
-    {
-        var rawData = $"{amount}{merchantId}{transactionId}{_secretKey}";
-
-        using var sha256 = SHA256.Create();
-        var bytes = Encoding.UTF8.GetBytes(rawData);
-        var hash2 = sha256.ComputeHash(bytes);
-        var computedHash = BitConverter.ToString(hash2).Replace("-", "").ToLower();
-
-       return string.Equals(computedHash, hash, StringComparison.OrdinalIgnoreCase);
-        
-    }
+   
 }

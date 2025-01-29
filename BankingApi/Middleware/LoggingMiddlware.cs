@@ -5,23 +5,32 @@ namespace BankingApi.Middleware
     public class LoggingMiddleware
     {
         private static readonly HashSet<string> SkipNameList = new()
-    {
-        "Password",
-        "password",
-        "VCC",
-        "apikey",
-        "APIKey",
-        "secret",
-        "Secret"
-    };
+        {
+            "Password",
+            "password",
+            "VCC",
+            "apikey",
+            "APIKey",
+            "secret",
+            "Secret"
+        };
 
         private readonly ILogger<LoggingMiddleware> _logger;
         private readonly RequestDelegate _next;
+        private readonly string _logFilePath;
 
         public LoggingMiddleware(RequestDelegate next, ILogger<LoggingMiddleware> logger)
         {
             _next = next;
             _logger = logger;
+
+            string logDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Logs");
+            _logFilePath = Path.Combine(logDirectory, "log-file.log");
+
+            if (!Directory.Exists(logDirectory))
+            {
+                Directory.CreateDirectory(logDirectory);
+            }
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -29,15 +38,15 @@ namespace BankingApi.Middleware
             var request = context.Request;
             var requestBody = await ReadRequestBodyAsync(request);
 
-            _logger.LogInformation("[{Time}] Request: {Method} {Path}{QueryString} Body: {Body}",
-                DateTime.UtcNow,
-                request.Method,
-                request.Path,
-                request.QueryString,
-                LogInputSanitizer(requestBody).Replace("\n", " ").Replace("\r", " ").Replace("  ", " ").Trim());
+            // Skip logging request body for HTML content
+            if (!IsHtmlContent(request.ContentType))
+            {
+                string requestLog = $"[{DateTime.UtcNow}] Request: {request.Method} {request.Path}{request.QueryString} Body: {LogInputSanitizer(requestBody)}\n";
+                _logger.LogInformation(requestLog);
+                await File.AppendAllTextAsync(_logFilePath, requestLog);
+            }
 
             var originalBodyStream = context.Response.Body;
-
             using var responseBody = new MemoryStream();
             context.Response.Body = responseBody;
 
@@ -47,7 +56,9 @@ namespace BankingApi.Middleware
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[{Time}] An exception occurred.", DateTime.UtcNow);
+                string errorLog = $"[{DateTime.UtcNow}] Exception: {ex.Message}\n";
+                _logger.LogError(ex, errorLog);
+                await File.AppendAllTextAsync(_logFilePath, errorLog);
                 throw;
             }
             finally
@@ -56,13 +67,21 @@ namespace BankingApi.Middleware
                 var responseText = await new StreamReader(context.Response.Body).ReadToEndAsync();
                 context.Response.Body.Seek(0, SeekOrigin.Begin);
 
-                _logger.LogInformation("[{Time}] Response: {StatusCode} Body: {Body}",
-                    DateTime.UtcNow,
-                    context.Response.StatusCode,
-                    LogInputSanitizer(responseText).Replace("\n", " ").Replace("\r", " ").Replace("  ", " ").Trim());
+                // Skip logging response body for HTML content
+                if (!IsHtmlContent(context.Response.ContentType))
+                {
+                    string responseLog = $"[{DateTime.UtcNow}] Response: {context.Response.StatusCode} Body: {LogInputSanitizer(responseText)}\n";
+                    _logger.LogInformation(responseLog);
+                    await File.AppendAllTextAsync(_logFilePath, responseLog);
+                }
 
                 await responseBody.CopyToAsync(originalBodyStream);
             }
+        }
+
+        private bool IsHtmlContent(string contentType)
+        {
+            return contentType?.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) ?? false;
         }
 
         private string LogInputSanitizer(string input)

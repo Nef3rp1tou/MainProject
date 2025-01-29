@@ -20,7 +20,7 @@ public class PaymentController : Controller
     }
 
     [HttpPost("payment/senddepositfinish")]
-    public async Task<IActionResult> SendDepositFinish([FromBody] DepositRequestDto request)
+    public async Task<IActionResult> SendDepositFinish([FromBody] DepositFinishRequestDto request)
     {
         try
         {

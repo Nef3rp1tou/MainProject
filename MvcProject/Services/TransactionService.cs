@@ -13,10 +13,15 @@ namespace MvcProject.Services
             _transactionRepository = transactionRepository;
         }
 
-        public async Task CreateTransactionAsync(Transactions transaction)
+        public async Task DepositAsync(Transactions transaction)
         {
-            await _transactionRepository.CreateTransactionAsync(transaction);
+            await _transactionRepository.DepositAsync(transaction);
         }
+        public async Task WithdrawAsync(Transactions transaction)
+        {
+            await _transactionRepository.WithdrawAsync(transaction);
+        }
+
 
         public async Task<IEnumerable<Transactions>> GetTransactionsByUserIdAsync(string userId)
         {

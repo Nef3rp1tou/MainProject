@@ -7,7 +7,18 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Content Remove="log4net.config" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="log4net.config">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Betsolutions.Casino.SDK" Version="1.0.4" />
+        <PackageReference Include="log4net" Version="3.0.3" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     </ItemGroup>

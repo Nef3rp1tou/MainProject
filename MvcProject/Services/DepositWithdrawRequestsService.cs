@@ -17,36 +17,49 @@ namespace MvcProject.Services
     public class DepositWithdrawRequestsService : IDepositWithdrawRequestsService
     {
         private readonly IDepositWithdrawRequestsRepository _requestRepository;
-        private readonly IWalletRepository _walletRepository;
-        private readonly IDbConnection _dbConnection;
-        private readonly IBankingApiService _bankingApiService;
+      
 
         public DepositWithdrawRequestsService(
-          IDepositWithdrawRequestsRepository requestRepository,
-          IWalletRepository walletRepository,
-          IDbConnection dbConnection, IBankingApiService bankingApiService)
+          IDepositWithdrawRequestsRepository requestRepository)
         {
             _requestRepository = requestRepository;
-            _walletRepository = walletRepository;
-            _dbConnection = dbConnection;
-            _bankingApiService = bankingApiService;
-
+      
         }
-        public async Task CreateRequestAsync(Guid transactionId, string userId, TransactionType type, decimal amount)
+  
+        public async Task RegisterDepositRequestAsync(Guid transactionId, string userId, decimal amount)
         {
             var request = new DepositWithdrawRequests
             {
                 Id = transactionId,
                 UserId = userId,
-                TransactionType = type,
                 Amount = amount,
-                Status = Status.Pending,
-                CreatedAt = DateTime.UtcNow
             };
 
-            await _requestRepository.CreateRequestAsync(request);
+            await _requestRepository.RegisterDepositRequestAsync(request);
         }
 
+        public async Task RegisterWithdrawRequestAsync(Guid transactionId, string userId, decimal amount)
+        {
+            var request = new DepositWithdrawRequests
+            {
+                Id = transactionId,
+                UserId = userId,
+                Amount = amount,
+            };
+            await _requestRepository.RegisterWithdrawRequestAsync(request);
+        }
+        public async Task RejectRequestAsync(Guid transactionId, string userId, decimal amount, TransactionType transactionType)
+        {
+            var request = new DepositWithdrawRequests
+            {
+                Id = transactionId,
+                UserId = userId,
+                Amount = amount,
+                TransactionType = transactionType
+            };
+            await _requestRepository.RejectRequestAsync(request);
+
+        }
         public async Task<IEnumerable<DepositWithdrawRequests>> GetRequestsByUserIdAsync(string userId)
         {
             return await _requestRepository.GetRequestsByUserIdAsync(userId);
@@ -60,19 +73,6 @@ namespace MvcProject.Services
         public async Task<IEnumerable<DepositWithdrawRequests>> GetPendingRequestsAsync()
         {
             return await _requestRepository.GetPendingRequestsAsync();
-        }
-
-        public async Task UpdateRequestStatusAsync(Guid id, Status status)
-        {
-            var request = await _requestRepository.GetRequestByIdAsync(id);
-
-            if (request == null)
-                throw new InvalidOperationException("Request not found.");
-
-            if (request.Status == Status.Success || request.Status == Status.Rejected)
-                throw new InvalidOperationException("Cannot update status of a processed request.");
-
-            await _requestRepository.UpdateRequestStatusAsync(id, status);
         }
   
     }

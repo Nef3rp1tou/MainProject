@@ -1,4 +1,6 @@
-﻿namespace MvcProject.DTOs
+﻿using MvcProject.Enums;
+
+namespace MvcProject.DTOs
 {
     public class WithdrawRequestDto
     {
@@ -6,5 +8,6 @@
         public int Amount { get; set; }
         public Guid MerchantId { get; set; }
         public string Hash { get; set; } = null!;
+        public Status Status { get; set; }
     }
 }

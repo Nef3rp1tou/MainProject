@@ -2,10 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using MvcProject.Enums;
 using MvcProject.Interfaces.IServices;
-using MvcProject.Models;
-using MvcProject.Services;
-using System;
-using System.Threading.Tasks;
+using NuGet.Protocol;
+
 
 namespace MvcProject.Controllers
 {
@@ -14,12 +12,10 @@ namespace MvcProject.Controllers
     {
         private readonly IDepositWithdrawRequestsService _requestService;
         private readonly IBankingApiService _bankingApiService;
-        private readonly IWalletService _walletService;
-        public AdminController(IDepositWithdrawRequestsService requestService, IBankingApiService bankingApiService, IWalletService walletService)
+        public AdminController(IDepositWithdrawRequestsService requestService, IBankingApiService bankingApiService)
         {
             _requestService = requestService;
             _bankingApiService = bankingApiService;
-            _walletService = walletService;
         }
 
         [HttpGet]
@@ -42,11 +38,17 @@ namespace MvcProject.Controllers
                     return Json(new { success = false, message = "Invalid request or already processed." });
                 }
 
-                await _bankingApiService.SendWithdrawRequestAsync(
+                var response = await _bankingApiService.SendWithdrawRequestAsync(
                     request.Id, request.Amount
                 );
 
-                return Json(new { success = true, message = "Withdrawal request sent to Banking API. Awaiting confirmation." });
+                return Json(new
+                {
+                    success = response.Status == Status.Success,
+                    message = response.Status == Status.Success
+                        ? "Withdrawal request sent to Banking API. Awaiting confirmation."
+                        : "Bank rejected the transaction."
+                });
             }
             catch (Exception ex)
             {
@@ -55,23 +57,19 @@ namespace MvcProject.Controllers
         }
 
 
-        // Reject a Request
         [HttpPost]
         public async Task<IActionResult> RejectRequest([FromBody] Guid requestId)
         {
             try
             {
                 var request = await _requestService.GetRequestByIdAsync(requestId);
-                var wallet = await _walletService.GetWalletByUserIdAsync(request.UserId);
 
                 if (request == null || request.TransactionType != TransactionType.Withdraw || request.Status != Status.Pending)
                 {
                     return Json(new { success = false, message = "Invalid request or already processed." });
                 }
                 
-                await _walletService.UnblockBalanceAsync(request.UserId, request.Amount);
-                await _walletService.UpdateWalletBalanceAsync(request.UserId, wallet.CurrentBalance + request.Amount);
-                await _requestService.UpdateRequestStatusAsync(requestId, Status.Rejected);
+                await _requestService.RejectRequestAsync(request.Id, request.UserId, request.Amount, request.TransactionType);
                 return Json(new { success = true, message = "Request rejected successfully!" });
             }
             catch (Exception ex)
