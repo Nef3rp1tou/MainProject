@@ -21,21 +21,12 @@ namespace MvcProject.Repositories
             parameters.Add("@Amount", request.Amount);
             parameters.Add("@TransactionType", request.TransactionType);
 
-            try
-            {
-                await _dbConnection.ExecuteAsync(sql, parameters, commandType: CommandType.StoredProcedure);
+            await _dbConnection.ExecuteAsync(sql, parameters, commandType: CommandType.StoredProcedure);
 
-                var id = parameters.Get<int>("@Id");
-                return id;
-            }
-            catch (SqlException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message, ex);
-            }
+            var id = parameters.Get<int>("@Id");
+            return id;
+
+
         }
 
         public async Task RejectRequestAsync(DepositWithdrawRequests requests)
@@ -48,60 +39,31 @@ namespace MvcProject.Repositories
             parameters.Add("@Amount", requests.Amount);
             parameters.Add("@TransactionType", requests.TransactionType);
 
-            try
-            {
-                await _dbConnection.ExecuteAsync(sql, parameters, commandType: CommandType.StoredProcedure);
-            }
-            catch (SqlException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("An unexpected error occurred while rejecting the request.", ex);
-            }
+            await _dbConnection.ExecuteAsync(sql, parameters, commandType: CommandType.StoredProcedure);
         }
 
         public async Task<IEnumerable<DepositWithdrawRequests>> GetRequestsByUserIdAsync(string userId)
         {
             var sql = "SELECT * FROM DepositWithdrawRequests WHERE UserId = @UserId";
 
-            try
-            {
-                return await _dbConnection.QueryAsync<DepositWithdrawRequests>(sql, new { UserId = userId });
-            }
-            catch (SqlException ex)
-            {
-                throw ex;
-            }
+            return await _dbConnection.QueryAsync<DepositWithdrawRequests>(sql, new { UserId = userId });
+            
         }
 
         public async Task<DepositWithdrawRequests> GetRequestByIdAsync(int id)
         {
             var sql = "SELECT * FROM DepositWithdrawRequests WHERE Id = @Id";
 
-            try
-            {
-                return await _dbConnection.QuerySingleOrDefaultAsync<DepositWithdrawRequests>(sql, new { Id = id });
-            }
-            catch (SqlException ex)
-            {
-                throw ex;
-            }
+            return await _dbConnection.QuerySingleOrDefaultAsync<DepositWithdrawRequests>(sql, new { Id = id });
+           
         }
 
         public async Task<IEnumerable<DepositWithdrawRequests>> GetPendingRequestsAsync()
         {
             var sql = "SELECT * FROM DepositWithdrawRequests WHERE Status = @PendingStatus AND TransactionType = 2";
 
-            try
-            {
-                return await _dbConnection.QueryAsync<DepositWithdrawRequests>(sql, new { PendingStatus = (byte)Status.Pending });
-            }
-            catch (SqlException ex)
-            {
-                throw ex;
-            }
+            return await _dbConnection.QueryAsync<DepositWithdrawRequests>(sql, new { PendingStatus = (byte)Status.Pending });
+           
         }
     }
 }

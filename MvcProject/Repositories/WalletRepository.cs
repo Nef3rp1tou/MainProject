@@ -20,21 +20,8 @@ namespace MvcProject.Repositories
         public async Task<Wallet> GetWalletByUserIdAsync(string userId)
         {
             var sql = "SELECT * FROM Wallet WHERE UserId = @UserId";
+            return await _dbConnection.QuerySingleOrDefaultAsync<Wallet>(sql, new { UserId = userId });
 
-            try
-            {
-                return await _dbConnection.QuerySingleOrDefaultAsync<Wallet>(sql, new { UserId = userId });
-            }
-            catch (SqlException ex)
-            {
-                _logger.Error($"SQL Error {ex.Number}: {ex.Message}", ex);
-                throw new Exception("An error occurred while fetching the wallet.", ex);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Unexpected Error: {ex.Message}", ex);
-                throw new Exception("An unexpected error occurred while fetching the wallet.", ex);
-            }
         }
 
         public async Task CreateWalletAsync(Wallet wallet)
@@ -44,21 +31,7 @@ namespace MvcProject.Repositories
             var parameters = new DynamicParameters();
             parameters.Add("@UserId", wallet.UserId);
             parameters.Add("@Currency", wallet.Currency);
-
-            try
-            {
-                await _dbConnection.ExecuteAsync(sql, parameters, commandType: CommandType.StoredProcedure);
-            }
-            catch (SqlException ex)
-            {
-                _logger.Error($"SQL Error {ex.Number}: {ex.Message}", ex);
-                throw new Exception("An error occurred while creating the wallet.", ex);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Unexpected Error: {ex.Message}", ex);
-                throw new Exception("An unexpected error occurred while creating the wallet.", ex);
-            }
+            await _dbConnection.ExecuteAsync(sql, parameters, commandType: CommandType.StoredProcedure);
         }
     }
 }

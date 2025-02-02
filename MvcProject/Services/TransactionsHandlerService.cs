@@ -27,21 +27,11 @@ namespace MvcProject.Services
             if (amount <= 0)
                 return ServiceResult.Failure("Amount must be greater than zero.");
 
-            try
-            {
-                var transactionId = await _requestService.RegisterDepositRequestAsync(userId, amount);
-                var response = await _bankingApiService.SendDepositRequestAsync(transactionId, amount);
+            var transactionId = await _requestService.RegisterDepositRequestAsync(userId, amount);
+            var response = await _bankingApiService.SendDepositRequestAsync(transactionId, amount);
 
-                return ServiceResult.Success("Deposit initiated successfully.", data: response.PaymentUrl);
-            }
-            catch (SqlException ex)
-            {
-                return ServiceResult.Failure(ex.Message, ex.Number);
-            }
-            catch (Exception ex)
-            {
-                return ServiceResult.Failure(ex.Message);
-            }
+            return ServiceResult.Success("Deposit initiated successfully.", data: response.PaymentUrl);
+
         }
 
         public async Task<ServiceResult> HandleWithdrawAsync(string userId, decimal amount)
@@ -53,19 +43,9 @@ namespace MvcProject.Services
             if (wallet.CurrentBalance < amount)
                 return ServiceResult.Failure("Insufficient Balance.");
 
-            try
-            {
-                var transactionId = await _requestService.RegisterWithdrawRequestAsync(userId, amount);
-                return ServiceResult.Success("Withdrawal request submitted successfully and is awaiting admin approval.");
-            }
-            catch (SqlException ex)
-            {
-                return ServiceResult.Failure(ex.Message, ex.Number);
-            }
-            catch (Exception ex)
-            {
-                return ServiceResult.Failure(ex.Message);
-            }
+            var transactionId = await _requestService.RegisterWithdrawRequestAsync(userId, amount);
+            return ServiceResult.Success("Withdrawal request submitted successfully and is awaiting admin approval.");
+
         }
     }
 

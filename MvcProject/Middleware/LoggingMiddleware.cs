@@ -1,12 +1,9 @@
 ﻿using System.Text.Json;
 using System.Web;
 using log4net;
-using Microsoft.AspNetCore.Http;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Linq;
-using System.Collections.Generic;
+
 
 namespace MvcProject.Middleware
 {
@@ -46,6 +43,8 @@ namespace MvcProject.Middleware
         public async Task InvokeAsync(HttpContext context)
         {
             var request = context.Request;
+            var method = request.Method;
+            var endpoint = request.Path;
 
             if (ShouldSkipLogging(request.ContentType))
             {
@@ -54,11 +53,10 @@ namespace MvcProject.Middleware
             }
 
             string requestBody = await ReadRequestBodyAsync(request);
-
             string sanitizedRequestBody = SanitizeContent(requestBody, request.ContentType);
             string sanitizedQueryString = SanitizeQueryString(request.QueryString.ToString());
 
-            LogToFile($"[{DateTime.UtcNow}] Request: {request.Method} {request.Path}{sanitizedQueryString} Body: {TruncateString(sanitizedRequestBody, 500)}");
+            LogToFile($"[{DateTime.UtcNow}] Request: {method} {endpoint}{sanitizedQueryString} Body: {TruncateString(sanitizedRequestBody, 500)}");
 
             var originalBodyStream = context.Response.Body;
             using var responseBody = new MemoryStream();
@@ -70,21 +68,25 @@ namespace MvcProject.Middleware
             }
             catch (Exception ex)
             {
-                LogToFile($"[{DateTime.UtcNow}] Exception: {SanitizeExceptionMessage(ex.Message)}", isError: true);
+                LogToFile($"[{DateTime.UtcNow}] Exception at {method} {endpoint}: {SanitizeExceptionMessage(ex.Message)}", isError: true);
                 throw;
             }
             finally
             {
                 context.Response.Body.Seek(0, SeekOrigin.Begin);
 
+                string responseText = string.Empty;
+                int statusCode = context.Response.StatusCode;
+
                 if (!ShouldSkipLogging(context.Response.ContentType))
                 {
-                    var responseText = await new StreamReader(context.Response.Body).ReadToEndAsync();
+                    responseText = await new StreamReader(context.Response.Body).ReadToEndAsync();
                     context.Response.Body.Seek(0, SeekOrigin.Begin);
-
-                    string responseLog = $"[{DateTime.UtcNow}] Response: {context.Response.StatusCode} Body: {TruncateString(SanitizeContent(responseText, context.Response.ContentType), 500)}";
-                    LogToFile(responseLog);
                 }
+
+                string sanitizedResponse = SanitizeContent(responseText, context.Response.ContentType);
+
+                LogToFile($"[{DateTime.UtcNow}] Response: {method} {endpoint} | Status: {statusCode} | Body: {TruncateString(sanitizedResponse, 500)}");
 
                 await responseBody.CopyToAsync(originalBodyStream);
             }

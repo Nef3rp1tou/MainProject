@@ -2,6 +2,7 @@
 using MvcProject.DTOs;
 using MvcProject.Interfaces.IServices;
 
+namespace MvcProject.Controllers;
 public class PaymentController : Controller
 {
     private readonly IBankingApiService _bankingApiService;
@@ -22,15 +23,8 @@ public class PaymentController : Controller
     [HttpPost("payment/senddepositfinish")]
     public async Task<IActionResult> SendDepositFinish([FromBody] DepositFinishRequestDto request)
     {
-        try
-        {
-            var response = await _bankingApiService.SendDepositFinishRequestAsync(request.TransactionId, request.Amount);
+        var response = await _bankingApiService.SendDepositFinishRequestAsync(request.TransactionId, request.Amount);
 
-            return Ok(new { status = response.Status, message = "Deposit finish processed successfully" });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = $"An error occurred: {ex.Message}" });
-        }
+        return Ok(new { status = response.Status, message = "Deposit finish processed successfully" });
     }
 }

@@ -44,23 +44,15 @@ namespace MvcProject.Services
 
         public async Task<ServiceResult> RejectRequestAsync(int requestId)
         {
-            try
+            var request = await _requestRepository.GetRequestByIdAsync(requestId);
+
+            if (request == null || request.TransactionType != TransactionType.Withdraw || request.Status != Status.Pending)
             {
-                var request = await _requestRepository.GetRequestByIdAsync(requestId);
-
-                if (request == null || request.TransactionType != TransactionType.Withdraw || request.Status != Status.Pending)
-                {
-                    return ServiceResult.Failure("Invalid request or already processed.");
-                }
-
-                await _requestRepository.RejectRequestAsync(request);
-                return ServiceResult.Success("Request rejected successfully!");
+                return ServiceResult.Failure("Invalid request or already processed.");
             }
-            catch (Exception ex)
-            {
-                return ServiceResult.Failure(ex.Message);
 
-            }
+            await _requestRepository.RejectRequestAsync(request);
+            return ServiceResult.Success("Request rejected successfully!");
         }
     }
 }

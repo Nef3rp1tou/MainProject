@@ -1,16 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MvcProject.Controllers
+namespace MvcProject.Controllers;
+[Authorize(Roles = "Player")]
+public class PlayerController : Controller
 {
-    [Authorize(Roles = "Player")]
-    public class PlayerController : Controller
+    public IActionResult Dashboard()
     {
-        public IActionResult Dashboard()
-        {
-            return View();
-        }
-
+        return View();
     }
 
 }

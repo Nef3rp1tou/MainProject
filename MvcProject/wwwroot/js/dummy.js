@@ -1,36 +1,48 @@
 ﻿$(document).ready(function () {
     const $confirmButton = $('#confirm-payment');
 
-    $confirmButton.click(function (e) {
+    $confirmButton.click(async function (e) {
         e.preventDefault();
 
         const transactionId = $confirmButton.data('transaction-id');
         const amount = $confirmButton.data('amount');
 
+        if (!transactionId || !amount || isNaN(amount) || parseFloat(amount) <= 0) {
+            ErrorHandler.warning('Invalid transaction details.');
+            return;
+        }
+
         $confirmButton.prop('disabled', true);
 
-        $.ajax({
-            url: '/payment/senddepositfinish',
-            type: 'POST',
-            dataType: 'json',
-            contentType: 'application/json',
-            data: JSON.stringify({ transactionId, amount }),
-            success: function (response) {
-                if (response && response.status === 2) {
-                    alert('Payment completed successfully!');
-                    window.location.href = '/home/index'; 
-                } else {
-                    alert('Payment failed. Please try again.');
-                }
-            },
-            error: function (xhr) {
-                const errorMessage = xhr.responseJSON?.message || 'An error occurred during the payment process.';
-                console.error('Error:', errorMessage);
-                alert(errorMessage);
-            },
-            complete: function () {
-                $confirmButton.prop('disabled', false);
+        try {
+            const response = await fetch('/payment/senddepositfinish', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({ transactionId, amount })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                const errorMessage = result.message || result.Message || 'An error occurred during payment processing.';
+                ErrorHandler.error(errorMessage);
+                return;
             }
-        });
+
+            if (result.status === 2) {
+                ErrorHandler.success('Payment completed successfully! Redirecting...');
+                setTimeout(() => { window.location.href = '/home/index'; }, 2000);
+            } else {
+                ErrorHandler.error(result.message || 'Payment failed. Please try again.');
+            }
+        } catch (error) {
+            console.error('Payment error:', error);
+            ErrorHandler.error('Failed to connect to the server. Please try again.');
+        } finally {
+            $confirmButton.prop('disabled', false);
+        }
     });
 });

@@ -4,6 +4,8 @@ using MvcProject.DTOs;
 using MvcProject.Interfaces.IServices;
 using System.Security.Claims;
 
+namespace MvcProject.Controllers;
+
 [Authorize]
 public class TransactionsController : Controller
 {
@@ -31,7 +33,7 @@ public class TransactionsController : Controller
             return Json(new { success = false, message = "User is not authenticated." });
 
         var result = await _transactionsHandlerService.HandleDepositAsync(userId, model.Amount);
-        return Json(new { statusCode = result.StatusCode, success = result.IsSuccess, message = result.Message, redirectUrl = result.Data });
+        return Json(new { success = result.IsSuccess, message = result.Message, redirectUrl = result.Data });
     }
 
     [HttpPost]
@@ -42,7 +44,7 @@ public class TransactionsController : Controller
             return Json(new { statusCode = StatusCodes.Status401Unauthorized, success = false, message = "User is not authenticated." });
 
         var result = await _transactionsHandlerService.HandleWithdrawAsync(userId, model.Amount);
-        return Json(new { statusCode = result.StatusCode, success = result.IsSuccess, message = result.Message, Data = result.Data});
+        return Json(new { success = result.IsSuccess, message = result.Message, Data = result.Data});
     }
 
     [HttpGet]

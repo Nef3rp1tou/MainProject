@@ -1,35 +1,54 @@
-﻿document.getElementById('withdraw-form').addEventListener('submit', function (event) {
-    event.preventDefault();
-    const amount = parseFloat(document.getElementById('amount').value);
+﻿// withdraw.js
+$(document).ready(function () {
+    const $form = $("#withdraw-form");
+    const $submitButton = $form.find('button[type="submit"]');
 
-    if (isNaN(amount) || amount <= 0) {
-        document.getElementById('response-message').innerText = 'Please provide valid input.';
-        return;
-    }
+    $form.submit(async function (e) {
+        e.preventDefault();
 
-    const data = { amount };
+        const amount = $("#amount").val();
+        if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+            ErrorHandler.warning('Please enter a valid amount.');
+            return;
+        }
 
-    fetch('/Transactions/Withdraw', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-        },
-        body: JSON.stringify(data)
-    })
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                document.getElementById('response-message').innerText = 'Withdrawal successful!';
-            } else {
-                document.getElementById('response-message').innerText = 'Withdrawal failed: ' + data.message;
+        $submitButton.prop('disabled', true);
+
+        try {
+            const response = await fetch('/Transactions/Withdraw', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({ amount: parseFloat(amount) })
+            });
+
+            const result = await response.json();
+
+            console.log('Server response:', result);
+
+            if (!response.ok) {
+                const errorMessage = result.message || result.Message || result.error || 'An error occurred while processing your withdrawal.';
+                ErrorHandler.error(errorMessage);
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('response-message').innerText = 'An error occurred. Please try again.';
-        });
+
+            if (result.success) {
+                ErrorHandler.success('Withdrawal request submitted successfully!');
+                $("#amount").val('');
+                if (typeof fetchWalletBalance === 'function') {
+                    fetchWalletBalance();
+                }
+            } else {
+                const errorMessage = result.message || result.Message || 'Withdrawal request failed.';
+                ErrorHandler.error(errorMessage);
+            }
+        } catch (error) {
+            console.error('Withdrawal error:', error);
+            ErrorHandler.error('Failed to connect to the server. Please try again.');
+        } finally {
+            $submitButton.prop('disabled', false);
+        }
+    });
 });

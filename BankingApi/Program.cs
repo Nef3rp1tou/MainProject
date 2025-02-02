@@ -36,6 +36,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseMiddleware<LoggingMiddleware>(); // Uses modified log4net-based middleware
+app.UseMiddleware<ErrorHandlingMiddleware>(); // Uses modified log4net-based middleware
 
 app.UseAuthorization();
 
