@@ -7,9 +7,16 @@ using BankingApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load log4net configuration
+string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+if (!Directory.Exists(logDirectory))
+{
+    Directory.CreateDirectory(logDirectory);
+}
+
+// Configure log4net
 var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
 XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
 
 builder.Services.AddControllers(); 
 builder.Services.AddEndpointsApiExplorer(); 

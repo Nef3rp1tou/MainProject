@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace BankingApi.Middleware
+namespace MvcProject.Middleware
 {
     public class LoggingMiddleware
     {

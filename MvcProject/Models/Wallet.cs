@@ -5,7 +5,7 @@ namespace MvcProject.Models
 {
     public class Wallet
     {
-        public Guid Id { get; set; }                 
+        public int Id { get; set; }                 
         public string UserId { get; set; }           
         public decimal CurrentBalance { get; set; }  
         public Currency Currency { get; set; }

@@ -10,7 +10,7 @@ namespace BankingApi.Utilities
             return number % 2 == 0;
         }
 
-        public static bool ValidateTheHash(string hash, Guid transactionId, int amount, Guid merchantId, string secretKey)
+        public static bool ValidateTheHash(string hash, int transactionId, int amount, Guid merchantId, string secretKey)
         {
             var rawData = $"{amount}{merchantId}{transactionId}{secretKey}";
 

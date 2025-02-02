@@ -16,15 +16,23 @@ using MvcProject.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load log4net configuration
+string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+if (!Directory.Exists(logDirectory))
+{
+    Directory.CreateDirectory(logDirectory);
+}
+
+// Configure log4net
 var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
 XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
 
 var connectionString = builder.Configuration.GetConnectionString("MvcProjectContextConnection")
     ?? throw new InvalidOperationException("Connection string 'MvcProjectContextConnection' not found.");
 
 builder.Services.AddDbContext<MvcProjectContext>(options =>
      options.UseSqlServer(connectionString));
+
 
 builder.Services.AddScoped<IWalletRepository, WalletRepository>();
 builder.Services.AddScoped<IWalletService, WalletService>();
@@ -35,6 +43,10 @@ builder.Services.AddScoped<IDepositWithdrawRequestsService, DepositWithdrawReque
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 
+
+builder.Services.AddScoped<ITransactionsHandlerService, TransactionsHandlerService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<ICallbackService, CallbackService>();
 builder.Services.AddScoped<IBankingApiService, BankingApiService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -85,7 +97,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-app.UseMiddleware<LoggingMiddleware>(); // Uses log4net-based middleware
+app.UseMiddleware<LoggingMiddleware>();
+
 
 app.UseRouting();
 

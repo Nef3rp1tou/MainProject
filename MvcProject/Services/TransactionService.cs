@@ -1,4 +1,5 @@
-﻿using MvcProject.Interfaces.IRepositories;
+﻿using MvcProject.DTOs;
+using MvcProject.Interfaces.IRepositories;
 using MvcProject.Interfaces.IServices;
 using MvcProject.Models;
 
@@ -13,11 +14,11 @@ namespace MvcProject.Services
             _transactionRepository = transactionRepository;
         }
 
-        public async Task DepositAsync(Transactions transaction)
+        public async Task DepositAsync(TransactionDto transaction)
         {
             await _transactionRepository.DepositAsync(transaction);
         }
-        public async Task WithdrawAsync(Transactions transaction)
+        public async Task WithdrawAsync(TransactionDto transaction)
         {
             await _transactionRepository.WithdrawAsync(transaction);
         }

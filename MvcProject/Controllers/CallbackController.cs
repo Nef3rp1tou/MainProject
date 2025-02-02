@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MvcProject.DTOs;
 using MvcProject.Interfaces.IServices;
 using MvcProject.Models;
-using MvcProject.Enums;
 
 namespace MvcProject.Controllers
 {
@@ -9,64 +9,25 @@ namespace MvcProject.Controllers
     [Route("callback")]
     public class CallbackController : ControllerBase
     {
-        private readonly IDepositWithdrawRequestsService _requestService;
-        private readonly ITransactionService _transactionService;
+        private readonly ICallbackService _callbackService;
 
-        public CallbackController(
-            IDepositWithdrawRequestsService requestService,
-            ITransactionService transactionService)
+        public CallbackController(ICallbackService callbackService)
         {
-            _requestService = requestService;
-            _transactionService = transactionService;
+            _callbackService = callbackService;
         }
 
         [HttpPost("handle")]
         public async Task<IActionResult> HandleCallback([FromBody] CallbackRequestModel callbackRequest)
         {
-            return await ProcessCallbackAsync(callbackRequest, isWithdraw: false);
+            var result = await _callbackService.ProcessCallbackAsync(callbackRequest, isWithdraw: false);
+            return result.IsSuccess ? Ok(result.Message) : BadRequest(result.Message);
         }
 
         [HttpPost("handlewithdraw")]
         public async Task<IActionResult> HandleWithdraw([FromBody] CallbackRequestModel callbackRequest)
         {
-            return await ProcessCallbackAsync(callbackRequest, isWithdraw: true);
-        }
-
-        private async Task<IActionResult> ProcessCallbackAsync(CallbackRequestModel callbackRequest, bool isWithdraw)
-        {
-            if (callbackRequest == null || callbackRequest.TransactionId == Guid.Empty)
-                return BadRequest("Invalid callback request.");
-           
-
-            try
-            {
-                var request = await _requestService.GetRequestByIdAsync(callbackRequest.TransactionId);
-                if (request == null)
-                    return NotFound("Transaction not found.");
-
-                if (callbackRequest.Status == Status.Success)
-                {
-                    var transaction = new Transactions
-                    {
-                        Id = Guid.NewGuid(),
-                        UserId = request.UserId,
-                        TransactionType = request.TransactionType,
-                        Amount = request.Amount,
-                        Status = Status.Success
-                    };
-
-                    if (isWithdraw)
-                        await _transactionService.WithdrawAsync(transaction);
-                    else
-                        await _transactionService.DepositAsync(transaction);
-                }
-
-                return Ok("Callback processed successfully.");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred while processing the callback: {ex.Message}");
-            }
+            var result = await _callbackService.ProcessCallbackAsync(callbackRequest, isWithdraw: true);
+            return result.IsSuccess ? Ok(result.Message) : BadRequest(result.Message);
         }
     }
 }

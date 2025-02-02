@@ -6,7 +6,7 @@ namespace MvcProject.Models
 {
     public class Transactions
     {
-        public Guid Id { get; set; } 
+        public int Id { get; set; } 
         public string UserId { get; set; }
         public TransactionType TransactionType { get; set; }
         public decimal Amount { get; set; } 

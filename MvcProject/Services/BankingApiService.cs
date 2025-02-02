@@ -20,7 +20,7 @@ namespace MvcProject.Services
             _httpClient = httpClient;
         }
 
-        private object CreateRequest(Guid transactionId, decimal amount)
+        private object CreateRequest(int transactionId, decimal amount)
         {
             var amountInCents = (int)(amount * 100);
             var hashData = $"{amountInCents}{_config.MerchantId}{transactionId}{_config.SecretKey}";
@@ -51,13 +51,13 @@ namespace MvcProject.Services
             return result;
         }
 
-        public Task<ApiResponse> SendDepositRequestAsync(Guid transactionId, decimal amount) =>
+        public Task<ApiResponse> SendDepositRequestAsync(int transactionId, decimal amount) =>
             PostRequestAsync<ApiResponse>("deposit", CreateRequest(transactionId, amount));
 
-        public Task<DepositFinishRequestDto> SendDepositFinishRequestAsync(Guid transactionId, decimal amount) =>
+        public Task<DepositFinishRequestDto> SendDepositFinishRequestAsync(int transactionId, decimal amount) =>
             PostRequestAsync<DepositFinishRequestDto>("deposit-finish", CreateRequest(transactionId, amount));
 
-        public Task<WithdrawRequestDto> SendWithdrawRequestAsync(Guid transactionId, decimal amount) =>
+        public Task<WithdrawRequestDto> SendWithdrawRequestAsync(int transactionId, decimal amount) =>
             PostRequestAsync<WithdrawRequestDto>("withdraw", CreateRequest(transactionId, amount));
 
         public bool ValidateHash(string receivedHash, string expectedData) =>

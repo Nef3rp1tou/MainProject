@@ -2,53 +2,44 @@
 using MvcProject.Interfaces.IRepositories;
 using MvcProject.Interfaces.IServices;
 using MvcProject.Models;
-using MvcProject.Repositories;
-using System.Data;
-using System.Threading.Tasks;
-using System.Transactions;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using NuGet.Protocol.Core.Types;
-
 
 namespace MvcProject.Services
 {
     public class DepositWithdrawRequestsService : IDepositWithdrawRequestsService
     {
         private readonly IDepositWithdrawRequestsRepository _requestRepository;
-      
 
-        public DepositWithdrawRequestsService(
-          IDepositWithdrawRequestsRepository requestRepository)
+        public DepositWithdrawRequestsService(IDepositWithdrawRequestsRepository requestRepository)
         {
             _requestRepository = requestRepository;
-      
         }
-  
-        public async Task RegisterDepositRequestAsync(Guid transactionId, string userId, decimal amount)
+
+        public async Task<int> RegisterDepositRequestAsync(string userId, decimal amount)
         {
             var request = new DepositWithdrawRequests
             {
-                Id = transactionId,
                 UserId = userId,
                 Amount = amount,
+                TransactionType = TransactionType.Deposit
             };
 
-            await _requestRepository.RegisterDepositRequestAsync(request);
+            var transactionId = await _requestRepository.RegisterTransactionAsync(request);
+            return transactionId;
         }
 
-        public async Task RegisterWithdrawRequestAsync(Guid transactionId, string userId, decimal amount)
+        public async Task<int> RegisterWithdrawRequestAsync(string userId, decimal amount)
         {
             var request = new DepositWithdrawRequests
             {
-                Id = transactionId,
                 UserId = userId,
                 Amount = amount,
+                TransactionType = TransactionType.Withdraw
             };
-            await _requestRepository.RegisterWithdrawRequestAsync(request);
+            var transactionId = await _requestRepository.RegisterTransactionAsync(request);
+            return transactionId;
         }
-        public async Task RejectRequestAsync(Guid transactionId, string userId, decimal amount, TransactionType transactionType)
+
+        public async Task RejectRequestAsync(int transactionId, string userId, decimal amount, TransactionType transactionType)
         {
             var request = new DepositWithdrawRequests
             {
@@ -58,14 +49,14 @@ namespace MvcProject.Services
                 TransactionType = transactionType
             };
             await _requestRepository.RejectRequestAsync(request);
-
         }
+
         public async Task<IEnumerable<DepositWithdrawRequests>> GetRequestsByUserIdAsync(string userId)
         {
             return await _requestRepository.GetRequestsByUserIdAsync(userId);
         }
 
-        public async Task<DepositWithdrawRequests> GetRequestByIdAsync(Guid id)
+        public async Task<DepositWithdrawRequests> GetRequestByIdAsync(int id)
         {
             return await _requestRepository.GetRequestByIdAsync(id);
         }
@@ -74,6 +65,5 @@ namespace MvcProject.Services
         {
             return await _requestRepository.GetPendingRequestsAsync();
         }
-  
     }
 }

@@ -1,11 +1,12 @@
-﻿using MvcProject.Models;
+﻿using MvcProject.DTOs;
+using MvcProject.Models;
 
 namespace MvcProject.Interfaces.IServices
 {
     public interface ITransactionService
     {
-        Task DepositAsync(Transactions transaction);
-        Task WithdrawAsync(Transactions transaction);
+        Task DepositAsync(TransactionDto transaction);
+        Task WithdrawAsync(TransactionDto transaction);
 
         Task<IEnumerable<Transactions>> GetTransactionsByUserIdAsync(string userId);
     }

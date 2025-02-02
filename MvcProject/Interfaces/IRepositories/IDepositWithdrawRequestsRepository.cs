@@ -5,11 +5,10 @@ namespace MvcProject.Interfaces.IRepositories
 {
     public interface IDepositWithdrawRequestsRepository
     {
-        Task RegisterDepositRequestAsync(DepositWithdrawRequests request);
-        Task RegisterWithdrawRequestAsync(DepositWithdrawRequests request);
+        Task<int> RegisterTransactionAsync(DepositWithdrawRequests request);
         Task RejectRequestAsync(DepositWithdrawRequests requests);
         Task<IEnumerable<DepositWithdrawRequests>> GetRequestsByUserIdAsync(string userId);
-        Task<DepositWithdrawRequests> GetRequestByIdAsync(Guid id);
+        Task<DepositWithdrawRequests> GetRequestByIdAsync(int id);
         Task<IEnumerable<DepositWithdrawRequests>> GetPendingRequestsAsync();
     }
 }
