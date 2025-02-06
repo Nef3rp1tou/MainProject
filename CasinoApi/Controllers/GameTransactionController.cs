@@ -23,6 +23,7 @@ namespace CasinoApi.Controllers
             var result = await _gameTransactionService.PlaceBet(request);
             return Ok(new CustomResponse(CustomStatusCode.Success, result));
         }
+
         [HttpPost("win")]
         public async Task<IActionResult> WinAsync([FromBody] WinRequestDto request)
         {
@@ -36,6 +37,7 @@ namespace CasinoApi.Controllers
             var result = await _gameTransactionService.CancelBetAsync(request);
             return Ok(new CustomResponse(CustomStatusCode.Success, result));
         }
+
         [HttpPost("changewin")]
         public async Task<IActionResult> ChangeWinAsync([FromBody] ChangeWinRequestDto request)
         {

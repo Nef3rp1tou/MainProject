@@ -1,5 +1,7 @@
 ﻿using CasinoApi.DTOs;
+using CasinoApi.Enums;
 using CasinoApi.Interfaces.IServices;
+using CasinoApi.Utilities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CasinoApi.Controllers
@@ -15,18 +17,18 @@ namespace CasinoApi.Controllers
             _userService = userService;
         }
 
-        [HttpGet("balance")]
-        public async Task<IActionResult> GetBalanceAsync([FromQuery] GetBalanceRequestDto request)
+        [HttpPost("balance")]
+        public async Task<IActionResult> GetBalanceAsync([FromBody] GetBalanceRequestDto request)
         {
             var result = await _userService.GetBalanceAsync(request);
-            return Ok(result);
+            return Ok(new CustomResponse(CustomStatusCode.Success, result));
         }
 
-        [HttpGet("info")]
-        public async Task<IActionResult> GetPlayerInfoAsync([FromQuery] Guid token)
+        [HttpPost("info")]
+        public async Task<IActionResult> GetPlayerInfoAsync([FromBody] UserInfoRequestDto info)
         {
-            var result = await _userService.GetPlayerInfoAsync(token);
-            return Ok(result);
+            var result = await _userService.GetPlayerInfoAsync(info.Token);
+            return Ok(new CustomResponse(CustomStatusCode.Success, result));
         }
     }
 }

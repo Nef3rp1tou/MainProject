@@ -3,10 +3,25 @@ using CasinoApi.Interfaces.IServices;
 using CasinoApi.Middlewares;
 using CasinoApi.Repositories;
 using CasinoApi.Services;
+using log4net.Config;
+using log4net;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using System.Reflection;
+using CasinoApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+if (!Directory.Exists(logDirectory))
+{
+    Directory.CreateDirectory(logDirectory);
+}
+
+// Configure log4net
+var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
 
 builder.Services.AddScoped<IDbConnection>(sp =>
 {
@@ -43,6 +58,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseMiddleware<LoggingMiddleware>();
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseAuthorization();

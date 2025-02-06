@@ -74,10 +74,5 @@ namespace CasinoApi.Repositories
             };
         }
     
-
-        public Task<UserInfoResponseDto> GetUserInfoAsync(string token)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
