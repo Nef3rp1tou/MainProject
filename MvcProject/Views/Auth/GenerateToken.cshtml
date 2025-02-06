@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Generate Token";
+}
+
+<div class="container mt-5">
+    <h2>Generate Public Token</h2>
+    <button id="generateTokenBtn" class="btn btn-primary mt-3">Generate Token</button>
+    <div class="mt-3">
+        <h5>Public Token:</h5>
+        <input type="text" id="publicToken" class="form-control" readonly>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/token.js" asp-append-version="true"></script>
+}

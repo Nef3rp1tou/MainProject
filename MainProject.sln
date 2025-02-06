@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvcProject", "MvcProject\Mv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingApi", "BankingApi\BankingApi.csproj", "{AF9DEFC5-44D8-4D66-BB60-81BE76CE7B7F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasinoApi", "CasinoApi\CasinoApi.csproj", "{5FA60607-A1A7-4D16-A3DA-ED943E9E101B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{AF9DEFC5-44D8-4D66-BB60-81BE76CE7B7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF9DEFC5-44D8-4D66-BB60-81BE76CE7B7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF9DEFC5-44D8-4D66-BB60-81BE76CE7B7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FA60607-A1A7-4D16-A3DA-ED943E9E101B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FA60607-A1A7-4D16-A3DA-ED943E9E101B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FA60607-A1A7-4D16-A3DA-ED943E9E101B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FA60607-A1A7-4D16-A3DA-ED943E9E101B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

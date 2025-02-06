@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
-using MvcProject.Enums;
-using System;
-
-namespace MvcProject.Models
+﻿using CasinoApi.Enums;
+using Microsoft.AspNetCore.Identity;
+namespace CasinoApi.Models
 {
     public class Transactions
     {

@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MvcProject.DTOs;
 using MvcProject.Interfaces.IServices;
 
 namespace MvcProject.Controllers;
+
+[Authorize(Roles = "Player")]
+
 public class PaymentController : Controller
 {
     private readonly IBankingApiService _bankingApiService;

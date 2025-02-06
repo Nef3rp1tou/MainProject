@@ -42,7 +42,7 @@
             console.error('Payment error:', error);
             ErrorHandler.error('Failed to connect to the server. Please try again.');
         } finally {
-            $confirmButton.prop('disabled', false);
+            $confirmButton.prop('disabled', true);
         }
     });
 });

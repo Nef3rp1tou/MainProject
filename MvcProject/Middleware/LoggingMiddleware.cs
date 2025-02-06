@@ -12,7 +12,7 @@ namespace MvcProject.Middleware
         private static readonly HashSet<string> SensitiveFields = new(StringComparer.OrdinalIgnoreCase)
         {
             "password", "pwd", "secret", "token", "apikey", "api_key", "vcc", "cvv",
-            "cardnumber", "card_number", "ssn", "key", "__RequestVerificationToken", "input.password"
+            "cardnumber", "card_number", "ssn", "key", "__RequestVerificationToken", "input.password", "privateToken"
         };
 
         private static readonly HashSet<string> ExcludedContentTypes = new(StringComparer.OrdinalIgnoreCase)

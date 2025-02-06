@@ -36,6 +36,8 @@ builder.Services.AddDbContext<MvcProjectContext>(options =>
 
 builder.Services.AddScoped<IWalletRepository, WalletRepository>();
 builder.Services.AddScoped<IWalletService, WalletService>();
+builder.Services.AddScoped<IUserTokenRepository, UserTokenRepository>();
+
 
 builder.Services.AddScoped<IDepositWithdrawRequestsRepository, DepositWithdrawRequestsRepository>();
 builder.Services.AddScoped<IDepositWithdrawRequestsService, DepositWithdrawRequestsService>();
@@ -48,6 +50,7 @@ builder.Services.AddScoped<ITransactionsHandlerService, TransactionsHandlerServi
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ICallbackService, CallbackService>();
 builder.Services.AddScoped<IBankingApiService, BankingApiService>();
+builder.Services.AddScoped<IUserTokenService, UserTokenService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -76,6 +79,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
+
 
 builder.Services.AddScoped<IDbConnection>(sp =>
     new SqlConnection(connectionString));

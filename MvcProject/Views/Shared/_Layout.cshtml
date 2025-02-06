@@ -142,6 +142,9 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Transactions" asp-action="History">Transaction History</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Auth" asp-action="GenerateToken">Generate Token</a>
+                            </li>
                         }
                         @if (User.IsInRole("Admin"))
                         {

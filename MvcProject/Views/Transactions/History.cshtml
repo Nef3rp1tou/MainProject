@@ -114,16 +114,58 @@
                     <tbody>
                         @foreach (var transaction in Model)
                         {
-                            var transactionType = transaction.TransactionType == MvcProject.Enums.TransactionType.Deposit ? "Deposit" :
-                            transaction.TransactionType == MvcProject.Enums.TransactionType.Withdraw ? "Withdraw" : "Unknown";
+                            var transactionType = transaction.TransactionType switch
+                            {
+                                MvcProject.Enums.TransactionType.Deposit => "Deposit",
+                                MvcProject.Enums.TransactionType.Withdraw => "Withdraw",
+                                MvcProject.Enums.TransactionType.Bet => "Bet",
+                                MvcProject.Enums.TransactionType.Win => "Win",
+                                MvcProject.Enums.TransactionType.CancelBet => "Cancel Bet",
+                                MvcProject.Enums.TransactionType.ChangeWin => "Change Win",
+                                _ => "Unknown"
+                            };
 
-                            var amountClass = transaction.TransactionType == MvcProject.Enums.TransactionType.Deposit ? "text-success" : "text-danger";
-                            var amountSign = transaction.TransactionType == MvcProject.Enums.TransactionType.Deposit ? "+" : "-";
-                            var formattedAmount = $"{amountSign} {transaction.Amount:F2}";
+                            string amountClass;
+                            string amountSign = "";
+
+                            switch (transaction.TransactionType)
+                            {
+                                case MvcProject.Enums.TransactionType.Deposit:
+                                case MvcProject.Enums.TransactionType.Win:
+                                case MvcProject.Enums.TransactionType.CancelBet:
+                                    amountClass = "text-success";
+                                    amountSign = "+";
+                                    break;
+
+                                case MvcProject.Enums.TransactionType.Withdraw:
+                                case MvcProject.Enums.TransactionType.Bet:
+                                    amountClass = "text-danger";
+                                    amountSign = "-";
+                                    break;
+
+                                case MvcProject.Enums.TransactionType.ChangeWin:
+                                    if (transaction.Amount >= 0)
+                                    {
+                                        amountClass = "text-success";
+                                        amountSign = "+";
+                                    }
+                                    else
+                                    {
+                                        amountClass = "text-danger";
+                                        amountSign = "-";
+                                    }
+                                    break;
+
+                                default:
+                                    amountClass = "";
+                                    break;
+                            }
+
+                            var formattedAmount = $"{amountSign} {Math.Abs(transaction.Amount):F2}";
 
                             <tr>
                                 <td>@transaction.Id</td>
-                                <td>@transactionType</td> <!-- Now it correctly shows "Deposit" or "Withdraw" -->
+                                <td>@transactionType</td>
                                 <td class="@amountClass fw-medium">@formattedAmount</td>
                                 <td>
                                     @if (transaction.Status == MvcProject.Enums.Status.Success)
@@ -132,7 +174,7 @@
                                     }
                                     else
                                     {
-                                        <span class="badge bg-danger">Failed</span>
+                                        <span class="badge bg-danger">Rejected</span>
                                     }
                                 </td>
                                 <td>@transaction.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>

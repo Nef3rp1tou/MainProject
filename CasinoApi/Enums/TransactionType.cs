@@ -1,4 +1,4 @@
-﻿namespace MvcProject.Enums
+﻿namespace CasinoApi.Enums
 {
     public enum TransactionType
     {
@@ -9,5 +9,4 @@
         CancelBet = 5,
         ChangeWin = 6
     }
-
 }
