@@ -31,47 +31,24 @@ namespace CasinoApi.Middlewares
         {
             var response = context.Response;
             response.ContentType = "application/json";
+            response.StatusCode = (int)HttpStatusCode.OK;
 
-
-
-            CustomResponse errorResponse = null;
-
-            response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            CustomStatusCode statusCode = CustomStatusCode.GeneralError; 
 
             switch (exception)
             {
                 case CustomException customEx:
-                    response.StatusCode = (int)customEx.StatusCode;
-                    errorResponse = new CustomResponse((CustomStatusCode)response.StatusCode);
+                    statusCode = customEx.StatusCode;
                     break;
 
                 case SqlException sqlEx:
-                    errorResponse = HandleSqlException(sqlEx);
-                    response.StatusCode = sqlEx.Number;
-                    break;
-
-                default:
-                    errorResponse = new CustomResponse(CustomStatusCode.GeneralError);
+                    statusCode = (CustomStatusCode)sqlEx.Number;
                     break;
             }
 
-            
-            if (errorResponse.Data == null)
-            {
-                return response.WriteAsync(JsonSerializer.Serialize(new
-                {
-                    StatusCode = errorResponse.StatusCode
-                }));
-            }
+            var errorResponse = new { StatusCode = (int)statusCode }; 
+
             return response.WriteAsync(JsonSerializer.Serialize(errorResponse));
         }
-
-
-        private static CustomResponse HandleSqlException(SqlException sqlEx)
-        {
-            return new CustomResponse((CustomStatusCode)sqlEx.Number);
-        }
-
     }
-
 }
