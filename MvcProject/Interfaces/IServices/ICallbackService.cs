@@ -7,6 +7,6 @@ namespace MvcProject.Interfaces.IServices
 {
     public interface ICallbackService
     {
-        Task<ServiceResult> ProcessCallbackAsync(CallbackRequestModel callbackRequest, bool isWithdraw);
+        Task<CustomResponse> ProcessCallbackAsync(CallbackRequestModel callbackRequest, bool isWithdraw);
     }
 }

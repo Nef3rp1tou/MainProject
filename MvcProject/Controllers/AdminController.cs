@@ -25,14 +25,14 @@ namespace MvcProject.Controllers
         public async Task<IActionResult> ApproveRequest([FromBody] int requestId)
         {
             var result = await _adminService.ApproveRequestAsync(requestId);
-            return Json(new { success = result.IsSuccess, message = result.Message });
+            return Ok(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> RejectRequest([FromBody] int requestId)
         {
             var result = await _adminService.RejectRequestAsync(requestId);
-            return Json(new { success = result.IsSuccess, message = result.Message });
+            return Ok(result);
         }
     }
 }

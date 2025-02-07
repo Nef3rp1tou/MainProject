@@ -16,6 +16,8 @@
         InvalidCurrency = 410,
         InvalidRequest = 411,
         InvalidIp = 412,
+        PendingTransactionExists = 420,
+        BankRejectedTransaction = 430,
         GeneralError = 500
     }
 }

@@ -20,14 +20,14 @@ namespace MvcProject.Services
             _transactionService = transactionService;
         }
 
-        public async Task<ServiceResult> ProcessCallbackAsync(CallbackRequestModel callbackRequest, bool isWithdraw)
+        public async Task<CustomResponse> ProcessCallbackAsync(CallbackRequestModel callbackRequest, bool isWithdraw)
         {
             if (callbackRequest == null || callbackRequest.TransactionId <= 0)
-                return ServiceResult.Failure("Invalid callback request.");
+                throw new CustomException(CustomStatusCode.InvalidRequest);
 
             var request = await _requestRepository.GetRequestByIdAsync(callbackRequest.TransactionId);
             if (request == null)
-                return ServiceResult.Failure("Transaction not found.");
+                throw new CustomException(CustomStatusCode.GeneralError,"Transaction not found.");
 
             if (callbackRequest.Status == Status.Success)
             {
@@ -45,10 +45,10 @@ namespace MvcProject.Services
                 else
                     await _transactionService.DepositAsync(transaction);
 
-                return ServiceResult.Success("Callback processed successfully.");
+                return new CustomResponse(CustomStatusCode.Success, message: "Callback processed successfully.");
             }
 
-            return ServiceResult.Failure("Callback status is not successful.");
+            throw new CustomException(CustomStatusCode.GeneralError,"Callback status is not successful.");
         }
     }
 }

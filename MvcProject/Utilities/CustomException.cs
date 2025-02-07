@@ -4,20 +4,18 @@ namespace MvcProject.Utilities
 {
     public class CustomException : Exception
     {
-        private CustomStatusCode insufficientBalance;
-
-        public CustomStatusCode StatusCode { get; }
-
-        public CustomException(CustomStatusCode statusCode, string message)
-       : base(message)
-        {
-            StatusCode = statusCode;
-        }
+        public CustomStatusCode StatusCode { get; set; }
 
         public CustomException(CustomStatusCode statusCode)
+            : base(ResponseMessages.GetDefaultMessage(statusCode))
         {
             StatusCode = statusCode;
         }
 
+        public CustomException(CustomStatusCode statusCode, string message)
+            : base(message)
+        {
+            StatusCode = statusCode;
+        }
     }
 }

@@ -23,36 +23,26 @@ namespace MvcProject.Services
             return await _requestRepository.GetPendingRequestsAsync();
         }
 
-        public async Task<ServiceResult> ApproveRequestAsync(int requestId)
+        public async Task<CustomResponse> ApproveRequestAsync(int requestId)
         {
             var request = await _requestRepository.GetRequestByIdAsync(requestId);
-
-            if (request == null || request.TransactionType != TransactionType.Withdraw || request.Status != Status.Pending)
-            {
-                return ServiceResult.Failure("Invalid request or already processed.");
-            }
 
             var response = await _bankingApiService.SendWithdrawRequestAsync(request.Id, request.Amount);
 
             if (response.Status == Status.Success)
             {
-                return ServiceResult.Success("Withdrawal request sent to Banking API. Awaiting confirmation.");
+                return new CustomResponse(CustomStatusCode.Success, message:"Withdrawal request sent to Banking API. Awaiting confirmation.");
             }
 
-            return ServiceResult.Failure("Bank rejected the transaction.");
+            throw new CustomException(CustomStatusCode.GeneralError);
         }
 
-        public async Task<ServiceResult> RejectRequestAsync(int requestId)
+        public async Task<CustomResponse> RejectRequestAsync(int requestId)
         {
             var request = await _requestRepository.GetRequestByIdAsync(requestId);
 
-            if (request == null || request.TransactionType != TransactionType.Withdraw || request.Status != Status.Pending)
-            {
-                return ServiceResult.Failure("Invalid request or already processed.");
-            }
-
             await _requestRepository.RejectRequestAsync(request);
-            return ServiceResult.Success("Request rejected successfully!");
+            return new CustomResponse(CustomStatusCode.Success, message:"Request rejected successfully!");
         }
     }
 }

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CasinoApi.Controllers
 {
-    [Route("api/user")]
+    [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
     {

@@ -20,7 +20,8 @@ namespace CasinoApi.Services
             {
                 throw new CustomException(CustomStatusCode.InvalidRequest);
             }
-            return await _tokenRepository.CreatePrivateTokenAsync(token.PublicToken);
+            var result = await _tokenRepository.GetPrivateTokenAsync(token.PublicToken);
+            return result;
         }
     }
 }

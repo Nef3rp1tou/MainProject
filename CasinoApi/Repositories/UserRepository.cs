@@ -44,16 +44,10 @@ namespace CasinoApi.Repositories
         {
             var sql = "[Dbo].[GetPlayerInfo]";
             var parameters = new DynamicParameters();
-
             parameters.Add("@PrivateToken", token);
-            parameters.Add("@UserId", dbType: DbType.String, direction: ParameterDirection.Output, size: 450);
-            parameters.Add("@UserName", dbType: DbType.String, direction: ParameterDirection.Output, size: 255);
-            parameters.Add("@Email", dbType: DbType.String, direction: ParameterDirection.Output, size: 255);
-            parameters.Add("@Currency", dbType: DbType.Int16, direction: ParameterDirection.Output);
-            parameters.Add("@CurrentBalance", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             parameters.Add("@StatusCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            await _dbConnection.ExecuteAsync(sql, parameters, commandType: CommandType.StoredProcedure);
+            var userInfo = await _dbConnection.QueryFirstOrDefaultAsync<UserInfoResponseDto>(sql, parameters, commandType: CommandType.StoredProcedure);
 
             var statusCode = parameters.Get<int>("@StatusCode");
 
@@ -62,16 +56,7 @@ namespace CasinoApi.Repositories
                 throw new CustomException((CustomStatusCode)statusCode);
             }
 
-            Currency currency = (Currency)parameters.Get<short>("@Currency");
-
-            return new UserInfoResponseDto
-            {
-                UserId = parameters.Get<string>("@UserId"),
-                UserName = parameters.Get<string>("@UserName"),
-                Email = parameters.Get<string>("@Email"),
-                Currency =  currency.ToString(),
-                CurrentBalance = parameters.Get<decimal>("@CurrentBalance")
-            };
+            return userInfo;
         }
     
     }

@@ -5,6 +5,8 @@ using MvcProject.Interfaces.IRepositories;
 using MvcProject.Models;
 using System.Data;
 using log4net;
+using MvcProject.Enums;
+using MvcProject.Utilities;
 
 namespace MvcProject.Repositories
 {
@@ -27,10 +29,17 @@ namespace MvcProject.Repositories
             parameters.Add("@UserId", transaction.UserId);
             parameters.Add("@TransactionType", transaction.TransactionType);
             parameters.Add("@Amount", transaction.Amount);
+            parameters.Add("@StatusCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            
             await _dbConnection.ExecuteAsync(sql, parameters, commandType: CommandType.StoredProcedure);
-            
+
+            var statusCode = parameters.Get<int>("@StatusCode");
+
+            if (statusCode != (int)CustomStatusCode.Success)
+            {
+                throw new CustomException((CustomStatusCode)statusCode);
+            }
+
         }
 
         public async Task WithdrawAsync(TransactionDto transaction)
@@ -43,8 +52,16 @@ namespace MvcProject.Repositories
             parameters.Add("@TransactionType", transaction.TransactionType);
             parameters.Add("@Amount", transaction.Amount);
             parameters.Add("@Status", transaction.Status);
+            parameters.Add("@StatusCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
             await _dbConnection.ExecuteAsync(sql, parameters, commandType: CommandType.StoredProcedure);
+
+            var statusCode = parameters.Get<int>("@StatusCode");
+
+            if (statusCode != (int)CustomStatusCode.Success)
+            {
+                throw new CustomException((CustomStatusCode)statusCode);
+            }
         }
 
         public async Task<IEnumerable<Transactions>> GetTransactionsByUserIdAsync(string userId)

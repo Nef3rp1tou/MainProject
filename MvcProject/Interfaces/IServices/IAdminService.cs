@@ -8,7 +8,7 @@ namespace MvcProject.Interfaces.IServices
     public interface IAdminService
     {
         Task<IEnumerable<DepositWithdrawRequests>> GetPendingRequestsAsync();
-        Task<ServiceResult> ApproveRequestAsync(int requestId);
-        Task<ServiceResult> RejectRequestAsync(int requestId);
+        Task<CustomResponse> ApproveRequestAsync(int requestId);
+        Task<CustomResponse> RejectRequestAsync(int requestId);
     }
 }

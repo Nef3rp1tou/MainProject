@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MvcProject.DTOs;
+using MvcProject.Enums;
 using MvcProject.Interfaces.IServices;
+using MvcProject.Utilities;
 
 namespace MvcProject.Controllers;
 
@@ -29,6 +31,7 @@ public class PaymentController : Controller
     {
         var response = await _bankingApiService.SendDepositFinishRequestAsync(request.TransactionId, request.Amount);
 
-        return Ok(new { status = response.Status, message = "Deposit finish processed successfully" });
+        return Ok(new CustomResponse(CustomStatusCode.Success, response, "Deposit finish processed successfully"));
+
     }
 }

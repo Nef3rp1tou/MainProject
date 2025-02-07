@@ -7,18 +7,18 @@ using CasinoApi.Interfaces.IServices;
 
 namespace CasinoApi.Controllers;
 
+[Route("api/[controller]")]
 [ApiController]
-[Route("api/auth")]
-public class AuthController : ControllerBase
+public class AuthenticatorController : ControllerBase
 {
     private readonly ITokenService _tokenService;
 
-    public AuthController(ITokenService tokenService)
+    public AuthenticatorController(ITokenService tokenService)
     {
         _tokenService = tokenService;
     }
 
-    [HttpPost("validate")]
+    [HttpPost("auth")]
     public async Task<IActionResult> ValidatePublicToken([FromBody] TokenRequestDto request)
     { 
        

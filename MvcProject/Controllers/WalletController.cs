@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MvcProject.Enums;
 using MvcProject.Interfaces.IServices;
+using MvcProject.Utilities;
 using System.Security.Claims;
 
 namespace MvcProject.Controllers;
@@ -16,17 +18,13 @@ public class WalletController : Controller
         _walletService = walletService;
     }
 
-    [Authorize]
+
     [HttpGet]
     public async Task<IActionResult> GetBalance()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var wallet = await _walletService.GetWalletByUserIdAsync(userId);
-        return Json(new
-        {
-            balance = wallet.CurrentBalance,
-            currency = wallet.Currency.ToString()
-        });
+        var wallet = await _walletService.GetWalletByUserIdAsync(userId ?? string.Empty);
+        return Ok(new CustomResponse(CustomStatusCode.Success, wallet));
     }
 
 }

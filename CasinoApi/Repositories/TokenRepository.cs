@@ -15,13 +15,13 @@ namespace CasinoApi.Repositories
             _dbConnection = dbConnection;
         }
 
-        public async Task<Guid> CreatePrivateTokenAsync(Guid publicToken)
+        public async Task<Guid> GetPrivateTokenAsync(Guid publicToken)
         {
 
-            var sql = "[Dbo].[GeneratePrivateToken]";
+            var sql = "[Dbo].[RetrievePrivateToken]";
             var parameters = new DynamicParameters();
             parameters.Add("@PublicToken", publicToken);
-            parameters.Add("@NewPrivateToken", dbType: DbType.Guid, direction: ParameterDirection.Output);
+            parameters.Add("@RetrievedPrivateToken", dbType: DbType.Guid, direction: ParameterDirection.Output);
             parameters.Add("@StatusCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
             await _dbConnection.ExecuteAsync(sql, parameters, commandType: CommandType.StoredProcedure);
@@ -33,7 +33,7 @@ namespace CasinoApi.Repositories
                 throw new CustomException((CustomStatusCode)statusCodeValue);
             }
 
-            return parameters.Get<Guid>("@NewPrivateToken");
+            return parameters.Get<Guid>("@RetrievedPrivateToken");
 
         }
     }

@@ -1,7 +1,7 @@
 ﻿using MvcProject.Interfaces.IServices;
 using log4net;
 using MvcProject.Utilities;
-using Microsoft.Data.SqlClient;
+using MvcProject.Enums;
 
 namespace MvcProject.Services
 {
@@ -22,29 +22,28 @@ namespace MvcProject.Services
             _walletService = walletService;
         }
 
-        public async Task<ServiceResult> HandleDepositAsync(string userId, decimal amount)
+        public async Task<CustomResponse> HandleDepositAsync(string userId, decimal amount)
         {
             if (amount <= 0)
-                return ServiceResult.Failure("Amount must be greater than zero.");
+                throw new CustomException(CustomStatusCode.InvalidAmount);
 
             var transactionId = await _requestService.RegisterDepositRequestAsync(userId, amount);
             var response = await _bankingApiService.SendDepositRequestAsync(transactionId, amount);
 
-            return ServiceResult.Success("Deposit initiated successfully.", data: response.PaymentUrl);
-
+            return new CustomResponse(CustomStatusCode.Success, response.PaymentUrl, "Deposit initiated successfully.");
         }
 
-        public async Task<ServiceResult> HandleWithdrawAsync(string userId, decimal amount)
+        public async Task<CustomResponse> HandleWithdrawAsync(string userId, decimal amount)
         {
             if (amount <= 0)
-                return ServiceResult.Failure("Amount must be greater than zero.");
+                throw new CustomException(CustomStatusCode.InvalidAmount);
 
             var wallet = await _walletService.GetWalletByUserIdAsync(userId);
-            if (wallet.CurrentBalance < amount)
-                return ServiceResult.Failure("Insufficient Balance.");
+            if (wallet.Balance < amount)
+                throw new CustomException(CustomStatusCode.InsufficientBalance);
 
             var transactionId = await _requestService.RegisterWithdrawRequestAsync(userId, amount);
-            return ServiceResult.Success("Withdrawal request submitted successfully and is awaiting admin approval.");
+            return new CustomResponse(CustomStatusCode.Success,  message: "Withdrawal request submitted successfully and is awaiting admin approval.");
 
         }
     }

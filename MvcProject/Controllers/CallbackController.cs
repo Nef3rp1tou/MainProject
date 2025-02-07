@@ -20,14 +20,14 @@ namespace MvcProject.Controllers
         public async Task<IActionResult> HandleCallback([FromBody] CallbackRequestModel callbackRequest)
         {
             var result = await _callbackService.ProcessCallbackAsync(callbackRequest, isWithdraw: false);
-            return result.IsSuccess ? Ok(result.Message) : BadRequest(result.Message);
+            return Ok(result);
         }
 
         [HttpPost("handlewithdraw")]
         public async Task<IActionResult> HandleWithdraw([FromBody] CallbackRequestModel callbackRequest)
         {
             var result = await _callbackService.ProcessCallbackAsync(callbackRequest, isWithdraw: true);
-            return result.IsSuccess ? Ok(result.Message) : BadRequest(result.Message);
+            return Ok(result);
         }
     }
 }

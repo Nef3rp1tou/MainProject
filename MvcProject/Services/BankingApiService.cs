@@ -38,14 +38,14 @@ namespace MvcProject.Services
         {
             var response = await _httpClient.PostAsJsonAsync($"{_config.BaseUrl}/{endpoint}", request);
 
-            var result = await response.Content.ReadFromJsonAsync<T>() ?? throw new Exception("Failed to deserialize response.");
+            var result = await response.Content.ReadFromJsonAsync<T>() ?? throw new CustomException(CustomStatusCode.InvalidRequest,"Failed to deserialize response.");
 
             var statusProperty = typeof(T).GetProperty("Status");
             if (statusProperty != null)
             {
-                var status = (Status)(statusProperty.GetValue(result) ?? throw new InvalidOperationException("Status property is null."));
+                var status = (Status)(statusProperty.GetValue(result) ?? throw new CustomException(CustomStatusCode.InvalidRequest,"Status property is null."));
                 if (status == Status.Rejected)
-                    throw new Exception("Bank rejected the transaction.");
+                    throw new CustomException(CustomStatusCode.BankRejectedTransaction,"Bank rejected the transaction.");
             }
             response.EnsureSuccessStatusCode();
             return result;

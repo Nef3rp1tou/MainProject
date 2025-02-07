@@ -2,6 +2,6 @@
 {
     public interface ITokenRepository
     {
-        Task<Guid> CreatePrivateTokenAsync(Guid publicToken);
+        Task<Guid> GetPrivateTokenAsync(Guid publicToken);
     }
 }

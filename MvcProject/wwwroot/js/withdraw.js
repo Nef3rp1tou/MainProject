@@ -26,26 +26,20 @@ $(document).ready(function () {
 
             const result = await response.json();
 
-            console.log('Server response:', result);
 
-            if (!response.ok) {
+            if (result.statusCode !== 200) {
                 const errorMessage = result.message || result.Message || result.error || 'An error occurred while processing your withdrawal.';
                 ErrorHandler.error(errorMessage);
                 return;
             }
 
-            if (result.success) {
-                ErrorHandler.success('Withdrawal request submitted successfully!');
-                $("#amount").val('');
-                if (typeof fetchWalletBalance === 'function') {
-                    fetchWalletBalance();
-                }
-            } else {
-                const errorMessage = result.message || result.Message || 'Withdrawal request failed.';
-                ErrorHandler.error(errorMessage);
-            }
+            ErrorHandler.success(result.message);
+            $("#amount").val('');
+            if (typeof fetchWalletBalance === 'function') {
+                fetchWalletBalance();
+            } 
+            
         } catch (error) {
-            console.error('Withdrawal error:', error);
             ErrorHandler.error('Failed to connect to the server. Please try again.');
         } finally {
             $submitButton.prop('disabled', false);

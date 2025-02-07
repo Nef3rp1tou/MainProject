@@ -25,11 +25,11 @@ namespace MvcProject.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
             {
-                throw new InvalidOperationException("User not found.");
+                throw new CustomException(CustomStatusCode.UserNotFound, "User not found.");
             }
 
             var publicToken = await _userTokenService.GeneratePublicToken(userId);
-            return Json(new { statusCode = 200, publicToken });
+            return Ok(new CustomResponse(CustomStatusCode.Success, publicToken));
         }
 
 

@@ -26,20 +26,19 @@
 
             const result = await response.json();
 
-            if (!response.ok) {
+            if (result.statusCode !== 200) {
                 const errorMessage = result.message || result.Message || 'An error occurred during payment processing.';
                 ErrorHandler.error(errorMessage);
                 return;
             }
 
-            if (result.status === 2) {
+            if (result.data.status === 2) {
                 ErrorHandler.success('Payment completed successfully! Redirecting...');
                 setTimeout(() => { window.location.href = '/home/index'; }, 2000);
             } else {
                 ErrorHandler.error(result.message || 'Payment failed. Please try again.');
             }
         } catch (error) {
-            console.error('Payment error:', error);
             ErrorHandler.error('Failed to connect to the server. Please try again.');
         } finally {
             $confirmButton.prop('disabled', true);

@@ -1,5 +1,6 @@
 ﻿// wallet.js
-async function fetchWalletBalance() {
+async function fetchWalletBalance()
+{
     try {
         const response = await fetch('/Wallet', {
             headers: {
@@ -7,23 +8,22 @@ async function fetchWalletBalance() {
             }
         });
 
-        const data = await response.json();
+        const json = await response.json();
 
-        console.log('Wallet response:', data);
-
-        if (!response.ok) {
-            const errorMessage = data.message || data.Message || 'Failed to fetch wallet balance';
+       
+        if (json.statusCode !== 200 ) {
+            const errorMessage = json.message || json.Message || 'Failed to fetch wallet balance';
             ErrorHandler.error(errorMessage);
             document.getElementById('wallet-balance').innerText = 'Balance: Error';
             return;
         }
 
-        const { balance, currency } = data;
+     
+        const { currency, balance } = json.data
 
         document.getElementById('wallet-balance').innerText = `Balance: ${balance.toFixed(2)} ${currency}`;
 
     } catch (error) {
-        console.error('Error fetching wallet balance:', error);
         ErrorHandler.error('Failed to connect to wallet service');
         document.getElementById('wallet-balance').innerText = 'Balance: Error';
     }

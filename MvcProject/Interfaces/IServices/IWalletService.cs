@@ -1,11 +1,12 @@
-﻿using MvcProject.Models;
+﻿using MvcProject.DTOs;
+using MvcProject.Models;
 
 namespace MvcProject.Interfaces.IServices
 {
 
     public interface IWalletService
     {
-        Task<Wallet> GetWalletByUserIdAsync(string userId);
+        Task<WalletResponseDto> GetWalletByUserIdAsync(string userId);
         Task CreateWalletForUserAsync(string userId, int currency);
    
     }

@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MvcProject.DTOs;
+using MvcProject.Enums;
 using MvcProject.Interfaces.IServices;
+using MvcProject.Utilities;
 using System.Security.Claims;
 
 namespace MvcProject.Controllers;
@@ -30,10 +32,10 @@ public class TransactionsController : Controller
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
-            return Json(new { success = false, message = "User is not authenticated." });
+            throw new CustomException(CustomStatusCode.UserNotFound);
 
         var result = await _transactionsHandlerService.HandleDepositAsync(userId, model.Amount);
-        return Json(new { success = result.IsSuccess, message = result.Message, redirectUrl = result.Data });
+        return Ok(result);
     }
 
     [HttpPost]
@@ -41,10 +43,10 @@ public class TransactionsController : Controller
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
-            return Json(new { statusCode = StatusCodes.Status401Unauthorized, success = false, message = "User is not authenticated." });
+            throw new CustomException(CustomStatusCode.UserNotFound);
 
         var result = await _transactionsHandlerService.HandleWithdrawAsync(userId, model.Amount);
-        return Json(new { success = result.IsSuccess, message = result.Message, Data = result.Data});
+        return Ok(result);
     }
 
     [HttpGet]

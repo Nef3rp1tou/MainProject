@@ -34,7 +34,7 @@ $(document).ready(function () {
             }
         })
             .done(function (response) {
-                if (response.success) {
+                if (response.statusCode === 200) {
                     ErrorHandler.success(response.message || `Request ${actionType}d successfully`);
                     setTimeout(() => {
                         location.reload();
@@ -46,8 +46,8 @@ $(document).ready(function () {
             })
             .fail(function (jqXHR) {
                 let errorMsg;
-                if (jqXHR.responseJSON) {
-                    errorMsg = jqXHR.responseJSON.message;
+                if (jqXHR.statusCode === 200) {
+                    errorMsg = jqXHR.message;
                 } else {
                     errorMsg = `Failed to ${actionType} request. Please try again.`;
                 }

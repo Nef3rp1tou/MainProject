@@ -6,7 +6,7 @@
             type: "POST",
             success: function (response) {
                 if (response.statusCode === 200) {
-                    $("#publicToken").val(response.publicToken);
+                    $("#publicToken").val(response.data);
 
                     $("#submitTokenBtn").show();
 

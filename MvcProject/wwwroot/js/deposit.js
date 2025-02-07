@@ -26,17 +26,15 @@ $(document).ready(function () {
 
             const result = await response.json();
 
-            if (!response.ok) {
+            if (result.statusCode !== 200) {
                 ErrorHandler.error(result.message || result.Message || 'An error occurred while processing your deposit.');
                 return;
             }
 
-            if (result.success) {
-                ErrorHandler.success('Processing your deposit...');
-                window.location.href = result.redirectUrl;
-            } else {
-                ErrorHandler.error(result.message || result.Message || 'Failed to process deposit.');
-            }
+           
+             ErrorHandler.success('Processing your deposit...');
+             window.location.href = result.data;
+            
         } catch (error) {
             console.error('Deposit error:', error);
             ErrorHandler.error('Failed to connect to the server. Please try again.');

@@ -13,6 +13,7 @@ using System.Data;
 using MvcProject.Settings;
 using Microsoft.Extensions.Options;
 using MvcProject.Middleware;
+using MvcProject.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
